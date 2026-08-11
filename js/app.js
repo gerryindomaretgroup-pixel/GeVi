@@ -1,131 +1,773 @@
 (() => {
   const config = window.GEVI_CONFIG || {};
+  const scenesOrder = Array.isArray(config.scenes)
+    ? config.scenes
+    : ["dark", "surprise", "record", "notes", "cake", "wish", "letter", "finale"];
 
-  const intro = document.getElementById("intro");
-  const openBtn = document.getElementById("open-card");
-  const card = document.getElementById("card");
-  const musicBar = document.getElementById("music-bar");
-  const musicToggle = document.getElementById("music-toggle");
-  const audio = document.getElementById("bg-music");
-  const video = document.getElementById("birthday-video");
-  const gallery = document.getElementById("gallery");
-  const galleryDots = document.getElementById("gallery-dots");
-  const canvas = document.getElementById("sparkles");
+  const FESTIVE_SCENES = new Set(["surprise", "record", "notes", "cake"]);
 
-  let musicOn = false;
+  const story = document.getElementById("story");
+  const progress = document.getElementById("progress");
+  const festoon = document.getElementById("festoon");
+  const sakuraFall = document.getElementById("sakura-fall");
+  const bloomVeil = document.getElementById("bloom-veil");
+  const lightBurst = document.getElementById("light-burst");
+  const lightSwitch = document.getElementById("light-switch");
+  const canvas = document.getElementById("embers");
+  const sceneEls = [...story.querySelectorAll(".scene")];
+
+  const turntable = document.getElementById("turntable");
+  const vinyl = document.getElementById("vinyl");
+  const tonearm = document.getElementById("tonearm");
+  const recordAudio = document.getElementById("record-audio");
+  const recordHint = document.getElementById("record-hint");
+  const recordSkip = document.getElementById("record-skip");
+  const recordNext = document.getElementById("record-next");
+  const sfxAudio = document.getElementById("sfx-audio");
+
+  let index = 0;
+  let transitioning = false;
   let particles = [];
   let rafId = 0;
+  let sakuraBuilt = false;
+  let musicPlaying = false;
+  let musicStarting = false;
+  let armDragging = false;
+  let noteIndex = 0;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function musicConfig() {
+    return config.music || {};
+  }
+
+  function sfxConfig() {
+    return config.sfx || {};
+  }
+
+  const sfxCache = {};
+  let audioUnlocked = false;
+
+  function preloadSfx() {
+    const conf = sfxConfig();
+    Object.keys(conf).forEach((key) => {
+      if (key === "volume" || typeof conf[key] !== "string") return;
+      if (sfxCache[key]) return;
+      // MDN: new Audio(url) starts loading asynchronously
+      const audio = new Audio(conf[key]);
+      audio.preload = "auto";
+      audio.load();
+      sfxCache[key] = audio;
+    });
+  }
+
+  async function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    preloadSfx();
+    // Warm-up silent play under user gesture (autoplay policy)
+    try {
+      const warm = new Audio(
+        "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAGAAGn9AAAIwgAJP8AAAD4AAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UMQZg8AAAaQAAAAAgAADSAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"
+      );
+      warm.volume = 0.01;
+      await warm.play();
+      warm.pause();
+    } catch {
+      /* still try later */
+    }
+  }
+
+  function playSfx(key) {
+    const conf = sfxConfig();
+    const src = conf[key];
+    if (!src) return Promise.resolve(false);
+    preloadSfx();
+    const vol = Math.min(1, Math.max(0, Number(conf.volume) || 0.95));
+    try {
+      const base = sfxCache[key] || new Audio(src);
+      sfxCache[key] = base;
+      const node = base.cloneNode(true);
+      node.volume = vol;
+      const playPromise = node.play();
+      if (playPromise && typeof playPromise.then === "function") {
+        return playPromise.then(() => true).catch(() => {
+          if (!sfxAudio) return false;
+          sfxAudio.src = src;
+          sfxAudio.volume = vol;
+          return sfxAudio.play().then(() => true).catch(() => false);
+        });
+      }
+      return Promise.resolve(true);
+    } catch {
+      return Promise.resolve(false);
+    }
+  }
+
+  function sfxForTransition(fromScene, toScene) {
+    if (fromScene === "dark" && toScene === "surprise") return "light";
+    const conf = sfxConfig();
+    if (conf[toScene]) return toScene;
+    return "bloom";
+  }
 
   function fillContent() {
-    const nameEl = document.getElementById("recipient-name");
-    const msgEl = document.getElementById("main-message");
-    const wishEl = document.getElementById("wish-text");
+    const name = config.recipientName || "Sahabatku";
+    const age = config.age || "";
+    const sender = (config.senderName || "").trim();
+    const showAge = config.showAge === true;
+    const music = musicConfig();
 
-    if (nameEl) nameEl.textContent = config.recipientName || "Happy Birthday";
-    if (msgEl) msgEl.textContent = config.mainMessage || "";
-    if (wishEl) wishEl.textContent = config.wishText || "";
+    setText("dark-text", config.darkText || "kok gelap ya…");
+    setText("switch-hint", config.switchHint || "nyalakan lampunya");
+    setText("surprise-eyebrow", config.surpriseEyebrow || "Surprise");
+    setText("surprise-title", config.surpriseTitle || "Selamat Ulang Tahun Sayangku");
+    setText("surprise-name", name);
 
-    buildGallery(Array.isArray(config.images) ? config.images : []);
-    setupVideo(config.video || "", config.videoPoster || "");
-    setupMusic(config.music || "");
-  }
-
-  function buildGallery(images) {
-    gallery.innerHTML = "";
-    galleryDots.innerHTML = "";
-
-    if (!images.length) {
-      gallery.innerHTML =
-        '<p class="section-sub">Belum ada foto. Tambahkan di js/config.js</p>';
-      return;
+    const ageEl = document.getElementById("surprise-age");
+    if (ageEl) {
+      ageEl.hidden = !showAge;
+      ageEl.textContent = showAge && age ? `yang ke-${age}` : "";
     }
 
-    images.forEach((src, i) => {
-      const figure = document.createElement("figure");
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = `Foto kenangan ${i + 1}`;
-      img.loading = i === 0 ? "eager" : "lazy";
-      img.decoding = "async";
-      figure.appendChild(img);
-      gallery.appendChild(figure);
+    setText("record-caption", music.caption || "ada lagu yang aku sisipin buat kamu.");
+    setText("record-hint", music.hint || "geser jarumnya ke piringan buat muterin");
 
+    const label = document.getElementById("vinyl-label");
+    if (label) label.textContent = (name.trim()[0] || "S").toUpperCase();
+
+    if (recordAudio && music.src) {
+      recordAudio.src = music.src;
+      recordAudio.preload = "auto";
+    }
+
+    setText("notes-intro", config.notesIntro || "sebelum tiup lilin, baca yang tadi nggak muat.");
+    renderNote(0);
+
+    const cake = config.cake || {};
+    setText("cake-caption", cake.caption || "sekarang bagian paling penting");
+    setText("cake-hint", cake.hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
+    setText("cake-card-text", cake.cardText || "Happy Birthday");
+    const cakeImg = document.getElementById("cake-image");
+    if (cakeImg && cake.image) cakeImg.src = cake.image;
+    buildCandles(Number(cake.candleCount) || 30);
+
+    setText("letter-preview", config.letterPreview || "");
+    setText("letter-sign", sender ? `— ${sender}` : "");
+    setText("finale-line", `Untuk ${name}.`);
+  }
+
+  function notesList() {
+    return Array.isArray(config.notes) && config.notes.length
+      ? config.notes
+      : ["Catatan belum diisi."];
+  }
+
+  function renderNote(i) {
+    const list = notesList();
+    noteIndex = Math.max(0, Math.min(i, list.length - 1));
+    setText("note-label", `Catatan kecil · ${noteIndex + 1}`);
+    const bodyEl = document.getElementById("note-body");
+    if (bodyEl) {
+      const raw = list[noteIndex] || "";
+      bodyEl.innerHTML = raw
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>")
+        .replace(/♥+/g, (m) => `<span class="love-mark">${"♥".repeat(m.length)}</span>`);
+    }
+    const dots = document.getElementById("note-dots");
+    const btn = document.getElementById("notes-next");
+    if (dots) {
+      dots.innerHTML = "";
+      list.forEach((_, idx) => {
+        const d = document.createElement("span");
+        if (idx === noteIndex) d.classList.add("is-active");
+        dots.appendChild(d);
+      });
+    }
+    if (btn) {
+      const last = noteIndex >= list.length - 1;
+      btn.textContent = last
+        ? config.notesFinalButton || "sekarang… kue-nya"
+        : "lanjut";
+      btn.dataset.notesAction = last ? "done" : "next";
+    }
+  }
+
+  function advanceNote() {
+    const list = notesList();
+    const card = document.getElementById("note-card");
+    if (noteIndex >= list.length - 1) {
+      goNext();
+      return;
+    }
+    playSfx("notes");
+    if (card) card.classList.add("is-swap");
+    window.setTimeout(() => {
+      renderNote(noteIndex + 1);
+      if (card) {
+        void card.offsetWidth;
+        card.classList.remove("is-swap");
+      }
+    }, 220);
+  }
+
+  /* ——— Cake / blow candles ——— */
+
+  const cakeStage = document.getElementById("cake-stage");
+  const cakeCandles = document.getElementById("cake-candles");
+  const cakeNext = document.getElementById("cake-next");
+  let cakeBlown = false;
+  let cakeHolding = false;
+  let cakeHoldTimer = 0;
+
+  function cakeConfig() {
+    return config.cake || {};
+  }
+
+  function buildCandles(count) {
+    if (!cakeCandles) return;
+    cakeCandles.innerHTML = "";
+    const n = Math.max(1, count | 0);
+    const outer = Math.ceil(n * 0.62);
+    const inner = n - outer;
+    const rings = [
+      { n: outer, cx: 50, cy: 43.5, rx: 26, ry: 12 },
+      { n: inner, cx: 50, cy: 43.5, rx: 15, ry: 7 },
+    ];
+    let made = 0;
+    rings.forEach((ring) => {
+      for (let i = 0; i < ring.n; i++) {
+        const t = (i / ring.n) * Math.PI * 2 + (made % 2) * 0.08;
+        const jitter = ((made * 17) % 7) - 3;
+        const x = ring.cx + Math.cos(t) * ring.rx + jitter * 0.12;
+        const y = ring.cy + Math.sin(t) * ring.ry + ((made % 5) - 2) * 0.18;
+        const el = document.createElement("span");
+        el.className = "candle";
+        el.style.left = `${x}%`;
+        el.style.top = `${y}%`;
+        el.innerHTML = '<span class="candle-flame"></span>';
+        cakeCandles.appendChild(el);
+        made += 1;
+      }
+    });
+  }
+
+  function enterCakeScene() {
+    cakeBlown = false;
+    cakeHolding = false;
+    if (cakeStage) cakeStage.classList.remove("is-holding", "is-blown");
+    if (cakeNext) cakeNext.hidden = true;
+    const cake = cakeConfig();
+    setText("cake-hint", cake.hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
+    buildCandles(Number(cake.candleCount) || 30);
+  }
+
+  function clearCakeHold() {
+    cakeHolding = false;
+    window.clearTimeout(cakeHoldTimer);
+    if (cakeStage && !cakeBlown) cakeStage.classList.remove("is-holding");
+    if (!cakeBlown) {
+      setText("cake-hint", cakeConfig().hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
+    }
+  }
+
+  function finishBlow() {
+    if (cakeBlown) return;
+    cakeBlown = true;
+    cakeHolding = false;
+    if (cakeStage) {
+      cakeStage.classList.remove("is-holding");
+      cakeStage.classList.add("is-blown");
+    }
+    playSfx("sparkle");
+    setText("cake-hint", cakeConfig().doneHint || "lilinnya padam… lanjut ya");
+    if (cakeNext) cakeNext.hidden = false;
+  }
+
+  function startCakeHold(event) {
+    if (scenesOrder[index] !== "cake" || cakeBlown) return;
+    unlockAudio();
+    cakeHolding = true;
+    if (cakeStage) cakeStage.classList.add("is-holding");
+    const holdMs = Number(cakeConfig().holdMs) || 2200;
+    setText("cake-hint", cakeConfig().progressHint || "dikit lagi…");
+    window.clearTimeout(cakeHoldTimer);
+    cakeHoldTimer = window.setTimeout(() => {
+      if (cakeHolding) finishBlow();
+    }, holdMs);
+    if (event && event.pointerId != null && cakeStage) {
+      try {
+        cakeStage.setPointerCapture(event.pointerId);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  if (cakeStage) {
+    cakeStage.addEventListener("pointerdown", startCakeHold);
+    cakeStage.addEventListener("pointerup", clearCakeHold);
+    cakeStage.addEventListener("pointercancel", clearCakeHold);
+    cakeStage.addEventListener("lostpointercapture", clearCakeHold);
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function buildProgress() {
+    progress.innerHTML = "";
+    scenesOrder.forEach((_, i) => {
       const dot = document.createElement("span");
       if (i === 0) dot.classList.add("is-active");
-      galleryDots.appendChild(dot);
+      progress.appendChild(dot);
+    });
+    progress.hidden = false;
+  }
+
+  function updateProgress() {
+    const dots = [...progress.querySelectorAll("span")];
+    dots.forEach((dot, i) => {
+      dot.classList.toggle("is-active", i === index);
+      dot.classList.toggle("is-done", i < index);
+    });
+  }
+
+  function updateFestoon(sceneName) {
+    if (!festoon) return;
+    const show = FESTIVE_SCENES.has(sceneName);
+    festoon.hidden = !show;
+    festoon.classList.toggle("is-visible", show);
+    if (show) buildSakuraFall();
+  }
+
+  function getSceneEl(name) {
+    return sceneEls.find((el) => el.dataset.scene === name);
+  }
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function getFlowerImages() {
+    const conf = config.flowers || {};
+    const images = Array.isArray(conf.images) ? conf.images.filter(Boolean) : [];
+    return images.length
+      ? images
+      : [
+          "assets/images/flowers/rose-pink.png",
+          "assets/images/flowers/sakura-pink.png",
+          "assets/images/flowers/peony-pink.png",
+        ];
+  }
+
+  function getPetalImages() {
+    const conf = config.flowers || {};
+    const petals = Array.isArray(conf.petals) ? conf.petals.filter(Boolean) : [];
+    return petals.length ? petals : getFlowerImages().slice(0, 3);
+  }
+
+  function buildSakuraFall() {
+    if (!sakuraFall || sakuraBuilt || reduceMotion) return;
+    sakuraFall.innerHTML = "";
+    const petals = getPetalImages();
+    const count = 16;
+    for (let i = 0; i < count; i++) {
+      const img = document.createElement("img");
+      img.className = "sakura-petal";
+      img.src = petals[i % petals.length];
+      img.alt = "";
+      img.decoding = "async";
+      img.style.left = `${4 + Math.random() * 92}%`;
+      img.style.setProperty("--pw", `${1.1 + Math.random() * 1.5}rem`);
+      img.style.setProperty("--dur", `${9 + Math.random() * 7}s`);
+      img.style.setProperty("--delay", `${-Math.random() * 10}s`);
+      img.style.setProperty("--drift", `${-50 + Math.random() * 100}px`);
+      img.style.setProperty("--spin", `${280 + Math.random() * 280}deg`);
+      sakuraFall.appendChild(img);
+    }
+    sakuraBuilt = true;
+  }
+
+  function buildBloomLayer() {
+    bloomVeil.innerHTML = "";
+    const images = getFlowerImages();
+    const spots = [];
+
+    // Grid rapat supaya layar HP tertutup penuh (termasuk pojok & tepi)
+    const cols = 5;
+    const rows = 7;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const jitterX = (Math.random() - 0.5) * 10;
+        const jitterY = (Math.random() - 0.5) * 8;
+        spots.push({
+          left: (c / (cols - 1)) * 100 + jitterX,
+          top: (r / (rows - 1)) * 100 + jitterY,
+          size: 24 + Math.random() * 18,
+        });
+      }
+    }
+
+    // Layer ekstra besar di tengah & pojok biar benar-benar “penuh”
+    const extras = [
+      { left: 50, top: 48, size: 52 },
+      { left: 18, top: 22, size: 40 },
+      { left: 82, top: 20, size: 42 },
+      { left: 14, top: 78, size: 44 },
+      { left: 86, top: 76, size: 46 },
+      { left: 50, top: 12, size: 36 },
+      { left: 50, top: 88, size: 38 },
+      { left: -2, top: 48, size: 40 },
+      { left: 102, top: 52, size: 40 },
+    ];
+    extras.forEach((e) => spots.push(e));
+
+    spots.forEach((spot, i) => {
+      const el = document.createElement("div");
+      el.className = "bloom-flower";
+      el.style.setProperty("--size", `${spot.size}vmin`);
+      el.style.setProperty("--rot", `${Math.floor(Math.random() * 360)}`);
+      el.style.setProperty("--delay", `${Math.floor((i % 12) * 38 + Math.random() * 90)}ms`);
+      el.style.setProperty("--out-delay", `${Math.floor(Math.random() * 220)}ms`);
+      el.style.left = `${spot.left}%`;
+      el.style.top = `${spot.top}%`;
+      el.style.zIndex = String(10 + Math.floor(Math.random() * 40));
+      const img = document.createElement("img");
+      img.src = pick(images);
+      img.alt = "";
+      img.decoding = "async";
+      img.draggable = false;
+      el.appendChild(img);
+      bloomVeil.appendChild(el);
+    });
+  }
+
+  async function playBloomTransition(sfxKey = "bloom") {
+    if (reduceMotion || !bloomVeil) {
+      if (sfxKey) await playSfx(sfxKey);
+      return;
+    }
+    buildBloomLayer();
+    const imgs = [...bloomVeil.querySelectorAll("img")];
+    await Promise.all(
+      imgs.map((img) => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
+    );
+    bloomVeil.classList.remove("is-out", "is-on");
+    void bloomVeil.offsetWidth;
+    // SFX + bunga muncul bersamaan (setelah gambar siap)
+    bloomVeil.classList.add("is-on");
+    if (sfxKey) playSfx(sfxKey);
+    await new Promise((r) => window.setTimeout(r, 1850));
+    bloomVeil.classList.add("is-out");
+    await new Promise((r) => window.setTimeout(r, 1050));
+    bloomVeil.classList.remove("is-on", "is-out");
+    bloomVeil.innerHTML = "";
+  }
+
+  async function playLightReveal() {
+    return new Promise((resolve) => {
+      if (!lightBurst) {
+        resolve();
+        return;
+      }
+      if (lightSwitch) lightSwitch.classList.add("is-on");
+      // SFX saklar bersamaan dengan cahaya
+      playSfx("light");
+      if (reduceMotion) {
+        resolve();
+        return;
+      }
+      lightBurst.classList.remove("is-on");
+      void lightBurst.offsetWidth;
+      lightBurst.classList.add("is-on");
+      window.setTimeout(() => {
+        resolve();
+        window.setTimeout(() => lightBurst.classList.remove("is-on"), 400);
+      }, 520);
+    });
+  }
+
+  async function swapScene(nextIndex) {
+    const current = getSceneEl(scenesOrder[index]);
+    const next = getSceneEl(scenesOrder[nextIndex]);
+    if (!next) return;
+
+    if (current && current !== next) {
+      current.classList.add("is-leaving");
+      current.classList.remove("is-active");
+    }
+
+    await new Promise((r) => {
+      window.setTimeout(r, current && current !== next ? 320 : 0);
     });
 
-    const dots = [...galleryDots.querySelectorAll("span")];
-    gallery.addEventListener(
-      "scroll",
-      () => {
-        const max = gallery.scrollWidth - gallery.clientWidth;
-        const progress = max > 0 ? gallery.scrollLeft / max : 0;
-        const index = Math.round(progress * (dots.length - 1));
-        dots.forEach((d, i) => d.classList.toggle("is-active", i === index));
-      },
-      { passive: true }
-    );
+    if (current && current !== next) {
+      current.hidden = true;
+      current.classList.remove("is-leaving");
+    }
+
+    next.hidden = false;
+    void next.offsetWidth;
+    next.classList.add("is-active");
+
+    index = nextIndex;
+    updateProgress();
+    updateFestoon(scenesOrder[index]);
+
+    if (scenesOrder[index] === "dark" && lightSwitch) {
+      lightSwitch.classList.remove("is-on");
+    }
+
+    if (scenesOrder[index] === "record") {
+      enterRecordScene();
+    } else {
+      leaveRecordScene();
+    }
+
+    if (scenesOrder[index] === "notes") {
+      renderNote(0);
+    }
+
+    if (scenesOrder[index] === "cake") {
+      enterCakeScene();
+    }
   }
 
-  function setupVideo(src, poster) {
-    const frame = video.closest(".video-frame");
-    if (!src) {
-      frame.classList.add("is-empty");
-      frame.setAttribute("data-empty", "1");
-      const note = document.createElement("p");
-      note.textContent = "Belum ada video. Tambahkan path di js/config.js";
-      frame.appendChild(note);
+  async function showScene(nextIndex, { restart = false, transition = "none" } = {}) {
+    if (transitioning) return;
+    if (nextIndex < 0 || nextIndex >= scenesOrder.length) return;
+    if (!restart && nextIndex === index) return;
+
+    transitioning = true;
+    const fromScene = scenesOrder[index];
+    const toScene = scenesOrder[nextIndex];
+    const sfxKey = sfxForTransition(fromScene, toScene);
+
+    if (transition === "light") {
+      await playLightReveal();
+      await swapScene(nextIndex);
+    } else if (transition === "bloom") {
+      // Bunga + SFX scene muncul bersamaan; bukan di jarum piringan
+      await playBloomTransition(sfxKey === "light" ? "bloom" : sfxKey);
+      await swapScene(nextIndex);
+    } else {
+      if (transition !== "none" && fromScene !== toScene) {
+        await playSfx(sfxKey);
+      }
+      await swapScene(nextIndex);
+    }
+
+    transitioning = false;
+  }
+
+  function goNext() {
+    if (index >= scenesOrder.length - 1) return;
+    const from = scenesOrder[index];
+    const transition = from === "dark" ? "light" : "bloom";
+    showScene(index + 1, { transition });
+  }
+
+  function restart() {
+    showScene(0, { restart: true, transition: "bloom" });
+  }
+
+  /* ——— Record player / music ——— */
+
+  function resetRecordUi() {
+    musicPlaying = false;
+    if (turntable) turntable.classList.remove("is-playing");
+    if (vinyl) vinyl.classList.remove("is-spinning");
+    if (tonearm) {
+      tonearm.classList.remove("is-on");
+      tonearm.setAttribute("aria-pressed", "false");
+    }
+    const music = musicConfig();
+    setText("record-hint", music.hint || "geser jarumnya ke piringan buat muterin");
+    if (recordSkip) recordSkip.hidden = false;
+    if (recordNext) recordNext.hidden = true;
+  }
+
+  function enterRecordScene() {
+    resetRecordUi();
+    if (recordSkip) recordSkip.hidden = false;
+    if (recordNext) recordNext.hidden = true;
+  }
+
+  function leaveRecordScene() {
+    stopMusic();
+  }
+
+  function showRecordContinue() {
+    if (recordSkip) recordSkip.hidden = true;
+    if (recordNext) recordNext.hidden = false;
+  }
+
+  async function startMusic() {
+    const music = musicConfig();
+    if (!recordAudio || !music.src) {
+      showRecordContinue();
       return;
     }
-    video.src = src;
-    if (poster) video.poster = poster;
-  }
+    if (musicPlaying || musicStarting) return;
+    musicStarting = true;
 
-  function setupMusic(src) {
-    if (!src) {
-      musicBar.hidden = true;
-      return;
-    }
-    audio.src = src;
-  }
-
-  async function playMusic() {
+    const startAt = Number(music.startAt) || 0;
     try {
-      await audio.play();
-      musicOn = true;
-      musicToggle.setAttribute("aria-pressed", "true");
-      musicToggle.setAttribute("aria-label", "Jeda musik");
-      musicToggle.querySelector(".music-label").textContent = "Musik on";
-    } catch {
-      musicOn = false;
-      musicToggle.setAttribute("aria-pressed", "false");
+      playSfx("needle");
+      recordAudio.pause();
+      recordAudio.currentTime = startAt;
+      await recordAudio.play();
+      musicPlaying = true;
+      if (turntable) turntable.classList.add("is-playing");
+      if (vinyl && !reduceMotion) vinyl.classList.add("is-spinning");
+      if (tonearm) {
+        tonearm.classList.add("is-on");
+        tonearm.setAttribute("aria-pressed", "true");
+      }
+      setText("record-hint", music.playingHint || "lagi muter… dengerin sampai habis ya");
+      showRecordContinue();
+    } catch (err) {
+      musicPlaying = false;
+      setText("record-hint", "ketuk lagi jarumnya untuk memutar");
+    } finally {
+      musicStarting = false;
     }
   }
 
-  function pauseMusic() {
-    audio.pause();
-    musicOn = false;
-    musicToggle.setAttribute("aria-pressed", "false");
-    musicToggle.setAttribute("aria-label", "Putar musik");
-    musicToggle.querySelector(".music-label").textContent = "Musik";
+  function stopMusic() {
+    musicPlaying = false;
+    if (recordAudio) {
+      recordAudio.pause();
+    }
+    if (turntable) turntable.classList.remove("is-playing");
+    if (vinyl) vinyl.classList.remove("is-spinning");
+    if (tonearm) {
+      tonearm.classList.remove("is-on");
+      tonearm.setAttribute("aria-pressed", "false");
+    }
   }
 
-  function openCard() {
-    intro.classList.add("is-leaving");
-
-    window.setTimeout(() => {
-      intro.hidden = true;
-      card.hidden = false;
-      musicBar.hidden = !config.music;
-      requestAnimationFrame(() => card.classList.add("is-visible"));
-
-      if (config.music) playMusic();
-      startSparkles();
-    }, 650);
+  function onMusicTimeUpdate() {
+    if (!musicPlaying || !recordAudio) return;
+    const endAt = Number(musicConfig().endAt) || 0;
+    if (endAt > 0 && recordAudio.currentTime >= endAt) {
+      stopMusic();
+      setText("record-hint", "selesai… lanjut kalau sudah siap");
+      showRecordContinue();
+    }
   }
 
-  /* Soft floating sparkles */
+  function getArmLimits() {
+    if (!tonearm) return { rest: -8, play: 52 };
+    const styles = window.getComputedStyle(tonearm);
+    const rest = Number.parseFloat(styles.getPropertyValue("--arm-rest")) || -8;
+    const play = Number.parseFloat(styles.getPropertyValue("--arm-play")) || 40;
+    return { rest, play };
+  }
+
+  function getArmPivot() {
+    if (!tonearm) return { x: 0, y: 0 };
+    const pivotEl = tonearm.querySelector(".tonearm-pivot");
+    if (pivotEl) {
+      const r = pivotEl.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }
+    const rect = tonearm.getBoundingClientRect();
+    return { x: rect.left + rect.width * 0.5, y: rect.top + 11 };
+  }
+
+  /** Sudut CSS (positif = jarum ke kiri / ke piringan) dari posisi pointer. */
+  function armAngleFromPointer(clientX, clientY) {
+    const pivot = getArmPivot();
+    const dx = clientX - pivot.x;
+    const dy = clientY - pivot.y;
+    // y ke bawah: atan2(dx, dy)=0 saat lurus ke bawah; kiri → sudut negatif → balik tanda utk CSS
+    let deg = (-Math.atan2(dx, dy) * 180) / Math.PI;
+    const { rest, play } = getArmLimits();
+    return Math.min(play, Math.max(rest, deg));
+  }
+
+  function armProgressFromAngle(deg) {
+    const { rest, play } = getArmLimits();
+    const span = play - rest || 1;
+    return Math.min(1, Math.max(0, (deg - rest) / span));
+  }
+
+  function setArmVisual(deg) {
+    if (!tonearm) return;
+    tonearm.classList.add("is-dragging");
+    tonearm.style.transform = `rotate(${deg}deg)`;
+  }
+
+  function clearArmInline() {
+    if (!tonearm) return;
+    tonearm.classList.remove("is-dragging");
+    tonearm.style.transform = "";
+  }
+
+  if (tonearm) {
+    const onDown = (event) => {
+      if (scenesOrder[index] !== "record" || musicPlaying) return;
+      armDragging = true;
+      tonearm.setPointerCapture?.(event.pointerId);
+      setArmVisual(armAngleFromPointer(event.clientX, event.clientY));
+      event.preventDefault();
+    };
+
+    const onMove = (event) => {
+      if (!armDragging) return;
+      const deg = armAngleFromPointer(event.clientX, event.clientY);
+      setArmVisual(deg);
+      if (armProgressFromAngle(deg) > 0.78) {
+        armDragging = false;
+        clearArmInline();
+        startMusic();
+      }
+    };
+
+    const onUp = (event) => {
+      if (!armDragging) return;
+      armDragging = false;
+      const deg = armAngleFromPointer(event.clientX, event.clientY);
+      clearArmInline();
+      if (armProgressFromAngle(deg) > 0.55) startMusic();
+      else if (tonearm) tonearm.classList.remove("is-on");
+    };
+
+    tonearm.addEventListener("pointerdown", (event) => {
+      unlockAudio();
+      onDown(event);
+    });
+    tonearm.addEventListener("pointermove", onMove);
+    tonearm.addEventListener("pointerup", onUp);
+    tonearm.addEventListener("pointercancel", onUp);
+    tonearm.addEventListener("click", () => {
+      unlockAudio();
+      if (scenesOrder[index] !== "record" || musicPlaying) return;
+      startMusic();
+    });
+  }
+
+  if (recordAudio) {
+    recordAudio.addEventListener("timeupdate", onMusicTimeUpdate);
+    recordAudio.addEventListener("ended", () => {
+      stopMusic();
+      setText("record-hint", "selesai… lanjut kalau sudah siap");
+      showRecordContinue();
+    });
+  }
+
+  if (recordSkip) {
+    recordSkip.addEventListener("click", () => {
+      stopMusic();
+      goNext();
+    });
+  }
+
   function resizeCanvas() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.floor(window.innerWidth * dpr);
@@ -137,21 +779,20 @@
   }
 
   function createParticles() {
-    const count = Math.min(48, Math.floor(window.innerWidth / 14));
+    const count = Math.min(36, Math.floor(window.innerWidth / 18));
     particles = Array.from({ length: count }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      r: Math.random() * 1.8 + 0.4,
-      vy: -(Math.random() * 0.35 + 0.08),
-      vx: (Math.random() - 0.5) * 0.2,
-      a: Math.random() * 0.45 + 0.15,
+      r: Math.random() * 1.4 + 0.3,
+      vy: -(Math.random() * 0.28 + 0.06),
+      vx: (Math.random() - 0.5) * 0.15,
+      a: Math.random() * 0.4 + 0.12,
     }));
   }
 
-  function drawSparkles() {
+  function drawEmbers() {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
     for (const p of particles) {
       p.x += p.vx;
       p.y += p.vy;
@@ -160,40 +801,68 @@
         p.x = Math.random() * window.innerWidth;
       }
       ctx.beginPath();
-      ctx.fillStyle = `rgba(246, 214, 200, ${p.a})`;
+      ctx.fillStyle = `rgba(232, 196, 192, ${p.a})`;
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fill();
     }
-
-    rafId = requestAnimationFrame(drawSparkles);
+    rafId = requestAnimationFrame(drawEmbers);
   }
 
-  function startSparkles() {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  function startEmbers() {
+    if (reduceMotion) return;
     resizeCanvas();
     createParticles();
     cancelAnimationFrame(rafId);
-    drawSparkles();
+    drawEmbers();
   }
 
-  openBtn.addEventListener("click", openCard);
+  if (lightSwitch) {
+    lightSwitch.addEventListener("click", () => {
+      unlockAudio();
+      if (scenesOrder[index] !== "dark") return;
+      goNext();
+    });
+  }
 
-  musicToggle.addEventListener("click", () => {
-    if (musicOn) pauseMusic();
-    else playMusic();
+  const notesNext = document.getElementById("notes-next");
+  if (notesNext) {
+    notesNext.addEventListener("click", () => {
+      unlockAudio();
+      if (scenesOrder[index] !== "notes") return;
+      advanceNote();
+    });
+  }
+
+  story.addEventListener("click", (event) => {
+    unlockAudio();
+    if (event.target.closest("#light-switch")) return;
+    if (event.target.closest("#tonearm")) return;
+    if (event.target.closest("#record-skip")) return;
+    if (event.target.closest("#notes-next")) return;
+    if (event.target.closest("#cake-stage")) return;
+    const nextBtn = event.target.closest("[data-next]");
+    const restartBtn = event.target.closest("[data-restart]");
+    if (restartBtn) {
+      restart();
+      return;
+    }
+    if (nextBtn) goNext();
   });
 
-  // Pause music softly when video plays (better on phone)
-  video.addEventListener("play", () => {
-    if (musicOn) pauseMusic();
+  // Preload assets early; unlock still needs gesture
+  preloadSfx();
+  getFlowerImages().forEach((src) => {
+    const img = new Image();
+    img.src = src;
   });
 
   window.addEventListener("resize", () => {
-    if (!card.hidden) {
-      resizeCanvas();
-      createParticles();
-    }
+    resizeCanvas();
+    createParticles();
   });
 
   fillContent();
+  buildProgress();
+  showScene(0, { restart: true });
+  startEmbers();
 })();

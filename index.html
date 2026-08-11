@@ -3,88 +3,190 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1a2f33" />
+    <meta name="theme-color" content="#050506" />
     <meta name="description" content="Kartu ucapan ulang tahun interaktif dari GeVi" />
-    <meta property="og:title" content="GeVi — Kartu Ulang Tahun" />
-    <meta property="og:description" content="Buka kartu ucapan ulang tahun interaktif: pesan, foto, video, dan musik." />
+    <meta property="og:title" content="GeVi — Untukmu" />
+    <meta property="og:description" content="Sebuah ruang kecil yang disiapkan diam-diam untuk hari spesialmu." />
     <meta property="og:type" content="website" />
-    <title>GeVi — Kartu Ulang Tahun</title>
+    <title>GeVi — Untukmu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Outfit:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Outfit:wght@300;400;500&family=Great+Vibes&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
     <div class="atmosphere" aria-hidden="true">
-      <span class="orb orb-a"></span>
-      <span class="orb orb-b"></span>
-      <span class="orb orb-c"></span>
-      <canvas id="sparkles" class="sparkles"></canvas>
+      <span class="veil veil-a"></span>
+      <span class="veil veil-b"></span>
+      <span class="veil veil-c"></span>
+      <canvas id="embers" class="embers"></canvas>
     </div>
 
-    <!-- LAYAR PEMBUKA -->
-    <section id="intro" class="intro" aria-label="Pembuka kartu">
-      <p class="brand">GeVi</p>
-      <h1 class="intro-title">Untukmu</h1>
-      <p class="intro-sub">Sebuah kartu ulang tahun kecil yang bisa kamu buka di sini.</p>
-      <button type="button" id="open-card" class="btn-open">
-        Buka kartu
-      </button>
-    </section>
+    <!-- Hiasan tetap untuk scene meriah -->
+    <div id="festoon" class="festoon" aria-hidden="true" hidden>
+      <svg class="bunting" viewBox="0 0 390 56" preserveAspectRatio="none">
+        <path class="bunting-cord" d="M8 10 Q195 28 382 10" />
+        <g class="flag f1"><path d="M28 12 L52 12 L40 42 Z" /></g>
+        <g class="flag f2"><path d="M62 14 L86 14 L74 44 Z" /></g>
+        <g class="flag f3"><path d="M96 16 L120 16 L108 46 Z" /></g>
+        <g class="flag f4"><path d="M130 17 L154 17 L142 47 Z" /></g>
+        <g class="flag f5"><path d="M164 16 L188 16 L176 46 Z" /></g>
+        <g class="flag f6"><path d="M198 15 L222 15 L210 45 Z" /></g>
+        <g class="flag f7"><path d="M232 14 L256 14 L244 44 Z" /></g>
+        <g class="flag f8"><path d="M266 13 L290 13 L278 43 Z" /></g>
+        <g class="flag f9"><path d="M300 12 L324 12 L312 42 Z" /></g>
+        <g class="flag f10"><path d="M334 11 L358 11 L346 41 Z" /></g>
+      </svg>
+      <span class="balloon b-tl"></span>
+      <span class="balloon b-tr"></span>
+      <span class="balloon b-bl"></span>
+      <span class="balloon b-br"></span>
+      <div id="sakura-fall" class="sakura-fall"></div>
+    </div>
 
-    <!-- ISI KARTU -->
-    <main id="card" class="card-flow" hidden>
-      <header class="hero-message">
-        <p class="brand brand-sm">GeVi</p>
-        <h2 id="recipient-name" class="recipient">Happy Birthday</h2>
-        <p id="main-message" class="message"></p>
-      </header>
+    <!-- Cascading flowers saat ganti scene -->
+    <div id="bloom-veil" class="bloom-veil" aria-hidden="true"></div>
 
-      <section class="media-block" aria-labelledby="photos-title">
-        <h3 id="photos-title" class="section-title">Kenangan</h3>
-        <p class="section-sub">Geser untuk melihat foto</p>
-        <div class="gallery" id="gallery" role="region" aria-roledescription="carousel"></div>
-        <div class="gallery-dots" id="gallery-dots" aria-hidden="true"></div>
-      </section>
+    <!-- Flash lampu kejutan (gelap → surprise) -->
+    <div id="light-burst" class="light-burst" aria-hidden="true"></div>
 
-      <section class="media-block" aria-labelledby="video-title">
-        <h3 id="video-title" class="section-title">Video</h3>
-        <p class="section-sub">Tekan play untuk menonton</p>
-        <div class="video-frame">
-          <video
-            id="birthday-video"
-            controls
-            playsinline
-            preload="metadata"
-            poster=""
-          >
-            Browser kamu tidak mendukung video.
-          </video>
+    <main id="story" class="story" aria-live="polite">
+      <!-- 1. Gelap + saklar lampu -->
+      <section class="scene is-active" data-scene="dark" aria-label="Pembuka gelap">
+        <div class="scene-inner">
+          <p class="dark-copy">
+            <span class="script-line" id="dark-text">kok gelap ya sayang…</span>
+          </p>
+          <button type="button" class="light-switch" id="light-switch" aria-label="Nyalakan lampu">
+            <span class="switch-plate">
+              <span class="switch-screw screw-a"></span>
+              <span class="switch-screw screw-b"></span>
+              <span class="switch-slot">
+                <span class="switch-toggle"></span>
+              </span>
+            </span>
+            <span class="hint" id="switch-hint">nyalakan lampunya</span>
+          </button>
         </div>
       </section>
 
-      <section class="media-block wish-block" aria-labelledby="wish-title">
-        <h3 id="wish-title" class="section-title">Pesan</h3>
-        <p id="wish-text" class="wish-text"></p>
+      <!-- 2. Surprise -->
+      <section class="scene" data-scene="surprise" hidden aria-label="Surprise">
+        <div class="scene-inner">
+          <p class="eyebrow" id="surprise-eyebrow">Surprise</p>
+          <h1 class="display display--wish" id="surprise-title">Selamat Ulang Tahun Sayangku</h1>
+          <p class="script-name" id="surprise-name">Septi Ratna Sari</p>
+          <button type="button" class="btn-next" data-next>lanjut</button>
+        </div>
       </section>
 
-      <footer class="closing">
-        <p class="closing-brand">GeVi</p>
-        <p class="closing-note">Dibuat dengan cinta untuk hari spesialmu.</p>
-      </footer>
+      <!-- 3. Record player + musik -->
+      <section class="scene" data-scene="record" hidden aria-label="Suara">
+        <div class="scene-inner">
+          <p class="script-line" id="record-caption">ada lagu yang aku sisipin buat kamu.</p>
+
+          <div class="turntable" id="turntable">
+            <div class="deck">
+              <div class="vinyl" id="vinyl" aria-hidden="true">
+                <span class="vinyl-label" id="vinyl-label">S</span>
+              </div>
+              <button
+                type="button"
+                class="tonearm"
+                id="tonearm"
+                aria-label="Geser jarum ke piringan untuk memutar"
+                aria-pressed="false"
+              >
+                <span class="tonearm-pivot"></span>
+                <span class="tonearm-beam"></span>
+                <span class="tonearm-head"></span>
+              </button>
+            </div>
+            <div class="eq" id="eq" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+
+          <p class="soft-line" id="record-hint">geser jarumnya ke piringan buat muterin</p>
+          <button type="button" class="btn-link" id="record-skip" hidden>lewati dulu</button>
+          <button type="button" class="btn-next" id="record-next" data-next hidden>lanjut</button>
+        </div>
+
+        <audio id="record-audio" preload="auto" playsinline></audio>
+      </section>
+
+      <!-- 4. Catatan kecil -->
+      <section class="scene" data-scene="notes" hidden aria-label="Catatan kecil">
+        <div class="scene-inner">
+          <p class="script-line" id="notes-intro">sebelum tiup lilin, baca yang tadi nggak muat.</p>
+          <article class="note-card" id="note-card">
+            <p class="note-label" id="note-label">Catatan kecil · 1</p>
+            <p class="note-body" id="note-body"></p>
+          </article>
+          <div class="note-dots" id="note-dots" aria-hidden="true"></div>
+          <button type="button" class="btn-next" id="notes-next">lanjut</button>
+        </div>
+      </section>
+
+      <!-- 5. Kue + tiup lilin -->
+      <section class="scene" data-scene="cake" hidden aria-label="Kue">
+        <div class="scene-inner scene-inner--cake">
+          <p class="script-line" id="cake-caption">sekarang bagian paling penting</p>
+          <button
+            type="button"
+            class="cake-stage"
+            id="cake-stage"
+            aria-label="Tekan dan tahan untuk meniup lilin"
+          >
+            <img id="cake-image" class="cake-image" src="assets/images/cake.png" alt="Kue ulang tahun" draggable="false" />
+            <span class="cake-card-text" id="cake-card-text">Happy Birthday</span>
+            <div class="cake-candles" id="cake-candles" aria-hidden="true"></div>
+            <span class="cake-hold-ring" id="cake-hold-ring" aria-hidden="true"></span>
+          </button>
+          <p class="soft-line" id="cake-hint">tekan &amp; tahan buat tiup lilinnya pelan-pelan</p>
+          <button type="button" class="btn-next" id="cake-next" data-next hidden>lanjut</button>
+        </div>
+      </section>
+
+      <!-- 6. Doa (placeholder) -->
+      <section class="scene" data-scene="wish" hidden aria-label="Doa">
+        <div class="scene-inner">
+          <p class="script-line">semoga terkabul</p>
+          <div class="wish-orb" aria-hidden="true"></div>
+          <p class="soft-line">Tahan layar sambil berdoa — langkah berikutnya</p>
+          <button type="button" class="btn-next" data-next>lanjut</button>
+        </div>
+      </section>
+
+      <!-- 7. Surat (placeholder) -->
+      <section class="scene" data-scene="letter" hidden aria-label="Surat">
+        <div class="scene-inner scene-inner--wide">
+          <article class="letter-sheet">
+            <p class="letter-body" id="letter-preview">
+              Surat panjang akan ditulis di langkah berikutnya.
+            </p>
+            <p class="letter-sign" id="letter-sign"></p>
+          </article>
+          <button type="button" class="btn-next" data-next>lanjut</button>
+        </div>
+      </section>
+
+      <!-- 8. Finale (placeholder) -->
+      <section class="scene" data-scene="finale" hidden aria-label="Penutup">
+        <div class="scene-inner">
+          <p class="display display--sm" id="finale-line">Untuk hari spesialmu.</p>
+          <p class="soft-line">Angka umur &amp; kenangan — langkah berikutnya</p>
+          <button type="button" class="btn-next" data-restart>dari awal</button>
+        </div>
+      </section>
     </main>
 
-    <!-- KONTROL MUSIK -->
-    <div id="music-bar" class="music-bar" hidden>
-      <button type="button" id="music-toggle" class="music-toggle" aria-pressed="false" aria-label="Putar musik">
-        <span class="music-icon" aria-hidden="true"></span>
-        <span class="music-label">Musik</span>
-      </button>
-      <audio id="bg-music" loop preload="auto"></audio>
-    </div>
+    <nav class="progress" id="progress" aria-label="Progres cerita" hidden></nav>
+
+    <audio id="sfx-audio" preload="auto" playsinline></audio>
 
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
