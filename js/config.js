@@ -106,7 +106,7 @@ window.GEVI_CONFIG = {
   notes: [
     "Ada sesuatu untukmu… 🌷\n\nTidak besar, tidak sempurna,\nhanya sebuah kejutan kecil\nyang dibuat dengan banyak perhatian.\n\nKarena hari ini,\nada seseorang yang ingin memastikan\nbahwa kamu tahu…\n\n*kamu layak untuk dirayakan.* 💐\n\n*Let's celebrate you.* ✨",
   ],
-  notesFinalButton: "sekarang… kue-nya",
+  notesFinalButton: "Surprise",
 
   /** Scene kue — Tart.png, lilin angka di area coklat (bukan di kartu) */
   cake: {
@@ -121,10 +121,17 @@ window.GEVI_CONFIG = {
     candleLeft: "50%",
     candleSpread: 5.2,
     caption: "sekarang bagian paling penting",
-    hint: "tekan & tahan buat tiup lilinnya pelan-pelan",
-    progressHint: "dikit lagi…",
+    waitHint: "sebentar… ada kejutan kecil",
+    confettiHint: "🎉",
+    revealHint: "kue ulang tahunmu…",
+    lightingHint: "nyalakan lilinnya…",
+    hint: "tekan & tahan lilinnya agak lama buat meniup",
+    progressHint: "dikit lagi… tiup pelan-pelan",
     doneHint: "lilinnya padam… lanjut ya",
     holdMs: 2200,
+    confettiMs: 1600,
+    revealMs: 1100,
+    lightingMs: 1400,
   },
 
   /** Scene doa — pejamkan mata, tombol lanjut muncul setelah waitMs */

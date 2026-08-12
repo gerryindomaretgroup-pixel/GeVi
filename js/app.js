@@ -145,7 +145,7 @@
 
     const cake = config.cake || {};
     setText("cake-caption", cake.caption || "sekarang bagian paling penting");
-    setText("cake-hint", cake.hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
+    setText("cake-hint", cake.waitHint || cake.hint || "sebentar… ada kejutan kecil");
     const cakeCard = document.getElementById("cake-card-text");
     if (cakeCard) {
       const showCard = cake.showCardText === true && cake.cardText;
@@ -258,12 +258,47 @@
   const cakeStage = document.getElementById("cake-stage");
   const cakeCandles = document.getElementById("cake-candles");
   const cakeNext = document.getElementById("cake-next");
+  const cakeConfetti = document.getElementById("cake-confetti");
   let cakeBlown = false;
   let cakeHolding = false;
+  let cakeReady = false;
   let cakeHoldTimer = 0;
+  let cakeIntroTimers = [];
 
   function cakeConfig() {
     return config.cake || {};
+  }
+
+  function clearCakeIntroTimers() {
+    cakeIntroTimers.forEach((id) => window.clearTimeout(id));
+    cakeIntroTimers = [];
+  }
+
+  function scheduleCake(fn, ms) {
+    const id = window.setTimeout(fn, ms);
+    cakeIntroTimers.push(id);
+    return id;
+  }
+
+  function buildCakeConfetti() {
+    if (!cakeConfetti || reduceMotion) return;
+    cakeConfetti.innerHTML = "";
+    const colors = ["#e8c4c0", "#c9a66b", "#f3ebe3", "#c4787a", "#f0d7a8", "#ffffff"];
+    const count = 46;
+    for (let i = 0; i < count; i++) {
+      const bit = document.createElement("span");
+      bit.className = "confetti-bit";
+      bit.style.left = `${Math.random() * 100}%`;
+      bit.style.setProperty("--cx", `${-40 + Math.random() * 80}px`);
+      bit.style.setProperty("--cy", `${70 + Math.random() * 50}vh`);
+      bit.style.setProperty("--rot", `${Math.floor(Math.random() * 720)}deg`);
+      bit.style.setProperty("--dur", `${1.1 + Math.random() * 0.9}s`);
+      bit.style.setProperty("--delay", `${Math.random() * 0.35}s`);
+      bit.style.background = colors[i % colors.length];
+      bit.style.width = `${6 + Math.random() * 7}px`;
+      bit.style.height = `${8 + Math.random() * 10}px`;
+      cakeConfetti.appendChild(bit);
+    }
   }
 
   function buildCandles() {
@@ -289,6 +324,7 @@
         el.className = "candle candle--digit";
         el.style.left = `${baseLeft + (i - mid) * gap}%`;
         el.style.top = baseTop;
+        el.style.setProperty("--light-delay", `${i * 280}ms`);
         el.innerHTML =
           '<span class="candle-flame"></span><span class="candle-digit-face" aria-hidden="true"></span>';
         el.querySelector(".candle-digit-face").textContent = ch;
@@ -325,6 +361,7 @@
         el.className = "candle";
         el.style.left = `${x}%`;
         el.style.top = `${y}%`;
+        el.style.setProperty("--light-delay", `${(made % 6) * 120}ms`);
         el.innerHTML = '<span class="candle-flame"></span>';
         cakeCandles.appendChild(el);
         made += 1;
@@ -332,27 +369,117 @@
     });
   }
 
+  function leaveCakeScene() {
+    clearCakeIntroTimers();
+    cakeReady = false;
+    cakeHolding = false;
+    if (cakeConfetti) {
+      cakeConfetti.classList.remove("is-on");
+      cakeConfetti.innerHTML = "";
+    }
+  }
+
+  function enableCakeBlow() {
+    cakeReady = true;
+    if (cakeStage) {
+      cakeStage.disabled = false;
+      cakeStage.classList.add("is-ready");
+    }
+    const cake = cakeConfig();
+    setText("cake-hint", cake.hint || "tekan & tahan lilinnya agak lama buat meniup");
+    playSfx("sparkle");
+  }
+
   function enterCakeScene() {
+    clearCakeIntroTimers();
     cakeBlown = false;
     cakeHolding = false;
-    if (cakeStage) cakeStage.classList.remove("is-holding", "is-blown");
-    if (cakeNext) cakeNext.hidden = true;
+    cakeReady = false;
     const cake = cakeConfig();
-    setText("cake-hint", cake.hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
+
+    if (cakeNext) cakeNext.hidden = true;
+    if (cakeStage) {
+      cakeStage.disabled = true;
+      cakeStage.classList.remove("is-holding", "is-blown", "is-revealed", "is-ready");
+      cakeStage.classList.add("is-concealed");
+    }
+    if (cakeCandles) {
+      cakeCandles.classList.add("is-unlit");
+      cakeCandles.classList.remove("is-lighting", "is-lit");
+    }
+    if (cakeConfetti) cakeConfetti.classList.remove("is-on");
+
+    setText("cake-hint", cake.waitHint || "sebentar… ada kejutan kecil");
     buildCandles();
+
+    if (reduceMotion) {
+      if (cakeStage) {
+        cakeStage.classList.remove("is-concealed");
+        cakeStage.classList.add("is-revealed");
+      }
+      if (cakeCandles) {
+        cakeCandles.classList.remove("is-unlit");
+        cakeCandles.classList.add("is-lit");
+      }
+      enableCakeBlow();
+      return;
+    }
+
+    // 1) Confetti dulu
+    buildCakeConfetti();
+    if (cakeConfetti) cakeConfetti.classList.add("is-on");
+    setText("cake-hint", cake.confettiHint || "🎉");
+    playSfx("finale");
+
+    const confettiMs = Number(cake.confettiMs) || 1600;
+    const revealMs = Number(cake.revealMs) || 1100;
+    const lightingMs = Number(cake.lightingMs) || 1400;
+
+    // 2) Kue muncul
+    scheduleCake(() => {
+      if (scenesOrder[index] !== "cake") return;
+      if (cakeConfetti) cakeConfetti.classList.remove("is-on");
+      setText("cake-hint", cake.revealHint || "kue ulang tahunmu…");
+      if (cakeStage) {
+        cakeStage.classList.remove("is-concealed");
+        cakeStage.classList.add("is-revealed");
+      }
+      playSfx("cake");
+    }, confettiMs);
+
+    // 3) Nyalakan lilin
+    scheduleCake(() => {
+      if (scenesOrder[index] !== "cake") return;
+      setText("cake-hint", cake.lightingHint || "nyalakan lilinnya…");
+      if (cakeCandles) {
+        cakeCandles.classList.remove("is-unlit");
+        cakeCandles.classList.add("is-lighting");
+      }
+      playSfx("sparkle");
+    }, confettiMs + revealMs);
+
+    // 4) Siap ditiup
+    scheduleCake(() => {
+      if (scenesOrder[index] !== "cake") return;
+      if (cakeCandles) {
+        cakeCandles.classList.remove("is-lighting");
+        cakeCandles.classList.add("is-lit");
+      }
+      enableCakeBlow();
+    }, confettiMs + revealMs + lightingMs);
   }
 
   function clearCakeHold() {
     cakeHolding = false;
     window.clearTimeout(cakeHoldTimer);
     if (cakeStage && !cakeBlown) cakeStage.classList.remove("is-holding");
-    if (!cakeBlown) {
-      setText("cake-hint", cakeConfig().hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
+    if (!cakeBlown && cakeReady) {
+      setText("cake-hint", cakeConfig().hint || "tekan & tahan lilinnya agak lama buat meniup");
     }
   }
 
   function finishBlow() {
-    if (cakeBlown) return;
+    if (cakeBlown || !cakeReady) return;
     cakeBlown = true;
     cakeHolding = false;
     if (cakeStage) {
@@ -365,12 +492,12 @@
   }
 
   function startCakeHold(event) {
-    if (scenesOrder[index] !== "cake" || cakeBlown) return;
+    if (scenesOrder[index] !== "cake" || cakeBlown || !cakeReady) return;
     unlockAudio();
     cakeHolding = true;
     if (cakeStage) cakeStage.classList.add("is-holding");
     const holdMs = Number(cakeConfig().holdMs) || 2200;
-    setText("cake-hint", cakeConfig().progressHint || "dikit lagi…");
+    setText("cake-hint", cakeConfig().progressHint || "dikit lagi… tiup pelan-pelan");
     window.clearTimeout(cakeHoldTimer);
     cakeHoldTimer = window.setTimeout(() => {
       if (cakeHolding) finishBlow();
@@ -739,6 +866,8 @@
 
     if (scenesOrder[index] === "cake") {
       enterCakeScene();
+    } else {
+      leaveCakeScene();
     }
 
     if (scenesOrder[index] === "wish") {

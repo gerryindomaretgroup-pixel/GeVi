@@ -139,18 +139,22 @@
       <section class="scene" data-scene="cake" hidden aria-label="Kue">
         <div class="scene-inner scene-inner--cake">
           <p class="script-line" id="cake-caption">sekarang bagian paling penting</p>
-          <button
-            type="button"
-            class="cake-stage"
-            id="cake-stage"
-            aria-label="Tekan dan tahan untuk meniup lilin"
-          >
-            <img id="cake-image" class="cake-image" src="assets/images/cake.png" alt="Kue ulang tahun" draggable="false" />
-            <span class="cake-card-text" id="cake-card-text" hidden>Happy Birthday</span>
-            <div class="cake-candles" id="cake-candles" aria-hidden="true"></div>
-            <span class="cake-hold-ring" id="cake-hold-ring" aria-hidden="true"></span>
-          </button>
-          <p class="soft-line" id="cake-hint">tekan &amp; tahan buat tiup lilinnya pelan-pelan</p>
+          <div class="cake-arena" id="cake-arena">
+            <div id="cake-confetti" class="cake-confetti" aria-hidden="true"></div>
+            <button
+              type="button"
+              class="cake-stage is-concealed"
+              id="cake-stage"
+              aria-label="Tekan dan tahan lilin untuk meniup"
+              disabled
+            >
+              <img id="cake-image" class="cake-image" src="assets/images/cake-tart.png" alt="Kue ulang tahun" draggable="false" />
+              <span class="cake-card-text" id="cake-card-text" hidden>Happy Birthday</span>
+              <div class="cake-candles is-unlit" id="cake-candles" aria-hidden="true"></div>
+              <span class="cake-hold-ring" id="cake-hold-ring" aria-hidden="true"></span>
+            </button>
+          </div>
+          <p class="soft-line" id="cake-hint">sebentar… ada kejutan kecil</p>
           <button type="button" class="btn-next" id="cake-next" data-next hidden>lanjut</button>
         </div>
       </section>
