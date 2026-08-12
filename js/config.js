@@ -213,7 +213,7 @@ window.GEVI_CONFIG = {
       sealedHint: "ketuk untuk membuka",
       label: "Special Invitation for You ✨",
       body:
-        "Hari ini adalah harimu, tapi izinkan aku yang merayakannya.\n\nAku ingin mengajakmu makan siang bersama untuk merayakan bertambahnya usiamu—sebuah momen kecil untuk mengapresiasi hadirmu yang selalu bikin hariku lebih cerah.\n\n📅 Hari / Tanggal: Sabtu, 5 September\n\n⏰ Waktu: Makan Siang (Lunch)\n\n📍 Tempat: A Surprise Destination Just for You\n\nWould you do me the honor of being my lunch date? 🍰",
+        "Hari ini adalah harimu, tapi izinkan aku yang merayakannya.\n\nAku ingin mengajakmu makan siang bersama untuk merayakan bertambahnya usiamu, sebuah momen kecil untuk mengapresiasi hadirmu yang selalu bikin hariku lebih cerah.\n\n📅 Hari / Tanggal: Sabtu, 5 September\n\n⏰ Waktu: Makan Siang (Lunch)\n\n📍 Tempat: A Surprise Destination Just for You\n\nWould you do me the honor of being my lunch date? 🍰",
       sign: "Mas Gerry",
     },
   },
