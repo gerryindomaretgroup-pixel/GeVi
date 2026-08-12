@@ -146,14 +146,56 @@
     const cake = config.cake || {};
     setText("cake-caption", cake.caption || "sekarang bagian paling penting");
     setText("cake-hint", cake.hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
-    setText("cake-card-text", cake.cardText || "Happy Birthday");
+    const cakeCard = document.getElementById("cake-card-text");
+    if (cakeCard) {
+      const showCard = cake.showCardText === true && cake.cardText;
+      cakeCard.hidden = !showCard;
+      cakeCard.textContent = showCard ? cake.cardText : "";
+    }
     const cakeImg = document.getElementById("cake-image");
     if (cakeImg && cake.image) cakeImg.src = cake.image;
-    buildCandles(Number(cake.candleCount) || 30);
+    buildCandles(Number(cake.candleCount) || 1);
 
-    setText("letter-preview", config.letterPreview || "");
-    setText("letter-sign", sender ? `— ${sender}` : "");
-    setText("finale-line", `Untuk ${name}.`);
+    const wish = wishConfig();
+    setText("wish-caption", wish.caption || "sebelum lanjut… tahan sejenak");
+    setText("wish-hint", wish.hint || "tekan & tahan sambil berdoa dalam hati");
+
+    setText("letter-label", config.letterLabel || "Untukmu");
+    renderLetterBody(config.letterBody || config.letterPreview || "");
+    const letterFrom = (config.letterSign || sender || "").trim();
+    setText("letter-sign", letterFrom ? `— ${letterFrom}` : "");
+
+    const finale = config.finale || {};
+    setText("finale-eyebrow", finale.eyebrow || "Terima kasih sudah sampai sini");
+    setText("finale-line", finale.line || `Untuk ${name}.`);
+    setText(
+      "finale-note",
+      finale.note || "Semoga harimu hangat, dan hatimu tenang."
+    );
+    const finaleAge = document.getElementById("finale-age");
+    if (finaleAge) {
+      const showFinaleAge = finale.showAge !== false && age;
+      finaleAge.hidden = !showFinaleAge;
+      finaleAge.textContent = showFinaleAge ? `yang ke-${age}` : "";
+    }
+  }
+
+  function formatRichText(raw) {
+    // Escape dulu, lalu terapkan markup ringan (MDN: em = emphasis, strong = importance)
+    return String(raw || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*([^*\n]+)\*/g, "<em>$1</em>")
+      .replace(/\n/g, "<br>")
+      .replace(/♥+/g, (m) => `<span class="love-mark">${"♥".repeat(m.length)}</span>`);
+  }
+
+  function renderLetterBody(raw) {
+    const el = document.getElementById("letter-preview");
+    if (!el) return;
+    el.innerHTML = formatRichText(raw);
   }
 
   function notesList() {
@@ -165,21 +207,16 @@
   function renderNote(i) {
     const list = notesList();
     noteIndex = Math.max(0, Math.min(i, list.length - 1));
-    setText("note-label", `Catatan kecil · ${noteIndex + 1}`);
+    const label =
+      list.length === 1 ? "Catatan kecil" : `Catatan kecil · ${noteIndex + 1}`;
+    setText("note-label", label);
     const bodyEl = document.getElementById("note-body");
-    if (bodyEl) {
-      const raw = list[noteIndex] || "";
-      bodyEl.innerHTML = raw
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\n/g, "<br>")
-        .replace(/♥+/g, (m) => `<span class="love-mark">${"♥".repeat(m.length)}</span>`);
-    }
+    if (bodyEl) bodyEl.innerHTML = formatRichText(list[noteIndex] || "");
     const dots = document.getElementById("note-dots");
     const btn = document.getElementById("notes-next");
     if (dots) {
       dots.innerHTML = "";
+      dots.hidden = list.length <= 1;
       list.forEach((_, idx) => {
         const d = document.createElement("span");
         if (idx === noteIndex) d.classList.add("is-active");
@@ -230,6 +267,18 @@
     if (!cakeCandles) return;
     cakeCandles.innerHTML = "";
     const n = Math.max(1, count | 0);
+
+    // Satu lilin mencolok di tengah atas kue
+    if (n === 1) {
+      const el = document.createElement("span");
+      el.className = "candle candle--hero";
+      el.style.left = "50%";
+      el.style.top = "38%";
+      el.innerHTML = '<span class="candle-flame"></span>';
+      cakeCandles.appendChild(el);
+      return;
+    }
+
     const outer = Math.ceil(n * 0.62);
     const inner = n - outer;
     const rings = [
@@ -261,7 +310,7 @@
     if (cakeNext) cakeNext.hidden = true;
     const cake = cakeConfig();
     setText("cake-hint", cake.hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
-    buildCandles(Number(cake.candleCount) || 30);
+    buildCandles(Number(cake.candleCount) || 1);
   }
 
   function clearCakeHold() {
@@ -311,6 +360,76 @@
     cakeStage.addEventListener("pointerup", clearCakeHold);
     cakeStage.addEventListener("pointercancel", clearCakeHold);
     cakeStage.addEventListener("lostpointercapture", clearCakeHold);
+  }
+
+  /* ——— Wish / hold to pray ——— */
+
+  const wishOrb = document.getElementById("wish-orb");
+  const wishNext = document.getElementById("wish-next");
+  let wishDone = false;
+  let wishHolding = false;
+  let wishHoldTimer = 0;
+
+  function wishConfig() {
+    return config.wish || {};
+  }
+
+  function enterWishScene() {
+    wishDone = false;
+    wishHolding = false;
+    if (wishOrb) wishOrb.classList.remove("is-holding", "is-done");
+    if (wishNext) wishNext.hidden = true;
+    setText("wish-caption", wishConfig().caption || "sebelum lanjut… tahan sejenak");
+    setText("wish-hint", wishConfig().hint || "tekan & tahan sambil berdoa dalam hati");
+  }
+
+  function clearWishHold() {
+    wishHolding = false;
+    window.clearTimeout(wishHoldTimer);
+    if (wishOrb && !wishDone) wishOrb.classList.remove("is-holding");
+    if (!wishDone) {
+      setText("wish-hint", wishConfig().hint || "tekan & tahan sambil berdoa dalam hati");
+    }
+  }
+
+  function finishWish() {
+    if (wishDone) return;
+    wishDone = true;
+    wishHolding = false;
+    if (wishOrb) {
+      wishOrb.classList.remove("is-holding");
+      wishOrb.classList.add("is-done");
+    }
+    playSfx("wish");
+    setText("wish-hint", wishConfig().doneHint || "semoga terkabul… lanjut ya");
+    if (wishNext) wishNext.hidden = false;
+  }
+
+  function startWishHold(event) {
+    if (scenesOrder[index] !== "wish" || wishDone) return;
+    unlockAudio();
+    wishHolding = true;
+    if (wishOrb) wishOrb.classList.add("is-holding");
+    const holdMs = Number(wishConfig().holdMs) || 2600;
+    setText("wish-hint", wishConfig().progressHint || "pelan-pelan… biarkan doanya nyangkut");
+    window.clearTimeout(wishHoldTimer);
+    wishHoldTimer = window.setTimeout(() => {
+      if (wishHolding) finishWish();
+    }, holdMs);
+    if (event && event.pointerId != null && wishOrb) {
+      try {
+        wishOrb.setPointerCapture(event.pointerId);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  if (wishOrb) {
+    wishOrb.addEventListener("pointerdown", startWishHold);
+    wishOrb.addEventListener("pointerup", clearWishHold);
+    wishOrb.addEventListener("pointercancel", clearWishHold);
+    wishOrb.addEventListener("lostpointercapture", clearWishHold);
   }
 
   function setText(id, value) {
@@ -373,66 +492,116 @@
   function buildSakuraFall() {
     if (!sakuraFall || sakuraBuilt || reduceMotion) return;
     sakuraFall.innerHTML = "";
+    const conf = config.flowers || {};
     const petals = getPetalImages();
-    const count = 16;
+    const count = Math.max(4, Math.min(12, Number(conf.petalCount) || 8));
+    const sizeMin = Number(conf.petalSizeMin) || 0.55;
+    const sizeMax = Number(conf.petalSizeMax) || 0.95;
     for (let i = 0; i < count; i++) {
       const img = document.createElement("img");
       img.className = "sakura-petal";
       img.src = petals[i % petals.length];
       img.alt = "";
       img.decoding = "async";
-      img.style.left = `${4 + Math.random() * 92}%`;
-      img.style.setProperty("--pw", `${1.1 + Math.random() * 1.5}rem`);
-      img.style.setProperty("--dur", `${9 + Math.random() * 7}s`);
-      img.style.setProperty("--delay", `${-Math.random() * 10}s`);
-      img.style.setProperty("--drift", `${-50 + Math.random() * 100}px`);
-      img.style.setProperty("--spin", `${280 + Math.random() * 280}deg`);
+      // Sebar tipis, hindari zona tengah teks (~25–75%)
+      const edge = Math.random() < 0.5;
+      const left = edge
+        ? 2 + Math.random() * 18
+        : 80 + Math.random() * 18;
+      img.style.left = `${left}%`;
+      const size = sizeMin + Math.random() * (sizeMax - sizeMin);
+      img.style.setProperty("--pw", `${size}rem`);
+      img.style.setProperty("--dur", `${12 + Math.random() * 8}s`);
+      img.style.setProperty("--delay", `${-Math.random() * 14}s`);
+      img.style.setProperty("--drift", `${-28 + Math.random() * 56}px`);
+      img.style.setProperty("--spin", `${200 + Math.random() * 220}deg`);
       sakuraFall.appendChild(img);
     }
     sakuraBuilt = true;
   }
 
-  function buildBloomLayer() {
-    bloomVeil.innerHTML = "";
-    const images = getFlowerImages();
-    const spots = [];
+  const BLOOM_VARIANTS = ["cascade", "burst", "rain", "spiral", "wave", "orbit"];
+  let bloomVariantIndex = 0;
 
-    // Grid rapat supaya layar HP tertutup penuh (termasuk pojok & tepi)
-    const cols = 5;
-    const rows = 7;
+  function nextBloomVariant() {
+    const name = BLOOM_VARIANTS[bloomVariantIndex % BLOOM_VARIANTS.length];
+    bloomVariantIndex += 1;
+    return name;
+  }
+
+  function makeBloomSpots(variant) {
+    const spots = [];
+    // Lebih padat supaya terasa full
+    const cols = 6;
+    const rows = 8;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const jitterX = (Math.random() - 0.5) * 10;
-        const jitterY = (Math.random() - 0.5) * 8;
+        const jitterX = (Math.random() - 0.5) * 9;
+        const jitterY = (Math.random() - 0.5) * 7;
         spots.push({
           left: (c / (cols - 1)) * 100 + jitterX,
           top: (r / (rows - 1)) * 100 + jitterY,
-          size: 24 + Math.random() * 18,
+          size: 22 + Math.random() * 16,
+          order: r * cols + c,
         });
       }
     }
-
-    // Layer ekstra besar di tengah & pojok biar benar-benar “penuh”
     const extras = [
-      { left: 50, top: 48, size: 52 },
-      { left: 18, top: 22, size: 40 },
-      { left: 82, top: 20, size: 42 },
-      { left: 14, top: 78, size: 44 },
-      { left: 86, top: 76, size: 46 },
-      { left: 50, top: 12, size: 36 },
-      { left: 50, top: 88, size: 38 },
-      { left: -2, top: 48, size: 40 },
-      { left: 102, top: 52, size: 40 },
+      { left: 50, top: 48, size: 48 },
+      { left: 18, top: 18, size: 38 },
+      { left: 82, top: 16, size: 40 },
+      { left: 12, top: 78, size: 42 },
+      { left: 88, top: 80, size: 44 },
+      { left: 50, top: 8, size: 34 },
+      { left: 50, top: 92, size: 36 },
+      { left: -4, top: 48, size: 38 },
+      { left: 104, top: 52, size: 38 },
+      { left: 32, top: 36, size: 30 },
+      { left: 68, top: 40, size: 32 },
+      { left: 40, top: 68, size: 30 },
+      { left: 62, top: 70, size: 31 },
     ];
-    extras.forEach((e) => spots.push(e));
+    extras.forEach((e, i) => spots.push({ ...e, order: 200 + i }));
 
-    spots.forEach((spot, i) => {
+    // Urutan delay berbeda per variasi (MDN: animation-delay)
+    spots.forEach((spot) => {
+      const i = spot.order;
+      if (variant === "cascade") {
+        spot.delay = Math.floor((spot.top / 100) * 900 + Math.random() * 120);
+      } else if (variant === "rain") {
+        spot.delay = Math.floor((spot.top / 100) * 700 + (spot.left / 100) * 180);
+      } else if (variant === "burst") {
+        const dx = spot.left - 50;
+        const dy = spot.top - 50;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        spot.delay = Math.floor(dist * 9 + Math.random() * 80);
+      } else if (variant === "spiral") {
+        const ang = Math.atan2(spot.top - 50, spot.left - 50);
+        spot.delay = Math.floor(((ang + Math.PI) / (Math.PI * 2)) * 1000);
+      } else if (variant === "wave") {
+        spot.delay = Math.floor((spot.left / 100) * 950 + Math.sin(spot.top / 18) * 80);
+      } else {
+        // orbit
+        spot.delay = Math.floor(((i % 16) * 55) + Math.random() * 90);
+      }
+      spot.outDelay = Math.floor(Math.random() * 280);
+    });
+    return spots;
+  }
+
+  function buildBloomLayer(variant = "cascade") {
+    bloomVeil.innerHTML = "";
+    bloomVeil.dataset.variant = variant;
+    const images = getFlowerImages();
+    const spots = makeBloomSpots(variant);
+
+    spots.forEach((spot) => {
       const el = document.createElement("div");
       el.className = "bloom-flower";
       el.style.setProperty("--size", `${spot.size}vmin`);
       el.style.setProperty("--rot", `${Math.floor(Math.random() * 360)}`);
-      el.style.setProperty("--delay", `${Math.floor((i % 12) * 38 + Math.random() * 90)}ms`);
-      el.style.setProperty("--out-delay", `${Math.floor(Math.random() * 220)}ms`);
+      el.style.setProperty("--delay", `${spot.delay}ms`);
+      el.style.setProperty("--out-delay", `${spot.outDelay}ms`);
       el.style.left = `${spot.left}%`;
       el.style.top = `${spot.top}%`;
       el.style.zIndex = String(10 + Math.floor(Math.random() * 40));
@@ -451,20 +620,22 @@
       if (sfxKey) await playSfx(sfxKey);
       return;
     }
-    buildBloomLayer();
+    const variant = nextBloomVariant();
+    buildBloomLayer(variant);
     const imgs = [...bloomVeil.querySelectorAll("img")];
     await Promise.all(
       imgs.map((img) => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
     );
     bloomVeil.classList.remove("is-out", "is-on");
+    BLOOM_VARIANTS.forEach((v) => bloomVeil.classList.remove(`variant-${v}`));
+    bloomVeil.classList.add(`variant-${variant}`);
     void bloomVeil.offsetWidth;
-    // SFX + bunga muncul bersamaan (setelah gambar siap)
     bloomVeil.classList.add("is-on");
     if (sfxKey) playSfx(sfxKey);
-    await new Promise((r) => window.setTimeout(r, 1850));
+    await new Promise((r) => window.setTimeout(r, 1950));
     bloomVeil.classList.add("is-out");
-    await new Promise((r) => window.setTimeout(r, 1050));
-    bloomVeil.classList.remove("is-on", "is-out");
+    await new Promise((r) => window.setTimeout(r, 1100));
+    bloomVeil.classList.remove("is-on", "is-out", `variant-${variant}`);
     bloomVeil.innerHTML = "";
   }
 
@@ -534,6 +705,10 @@
 
     if (scenesOrder[index] === "cake") {
       enterCakeScene();
+    }
+
+    if (scenesOrder[index] === "wish") {
+      enterWishScene();
     }
   }
 
@@ -840,6 +1015,7 @@
     if (event.target.closest("#record-skip")) return;
     if (event.target.closest("#notes-next")) return;
     if (event.target.closest("#cake-stage")) return;
+    if (event.target.closest("#wish-orb")) return;
     const nextBtn = event.target.closest("[data-next]");
     const restartBtn = event.target.closest("[data-restart]");
     if (restartBtn) {

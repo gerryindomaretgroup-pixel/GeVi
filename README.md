@@ -8,16 +8,16 @@ https://gerryindomaretgroup-pixel.github.io/GeVi/
 
 ## Alur (setelah QR)
 
-1. Layar gelap → ketuk  
+1. Layar gelap → saklar lampu  
 2. Surprise  
-3. Suara (record player) — *berikutnya*  
-4. Catatan kecil — *berikutnya*  
-5. Kue + tiup lilin — *berikutnya*  
-6. Lingkaran doa — *berikutnya*  
-7. Surat — *berikutnya*  
-8. Finale — *berikutnya*
+3. Suara (record player) — geser jarum / lewati  
+4. Catatan kecil (3 halaman)  
+5. Kue + tiup lilin (tekan & tahan)  
+6. Lingkaran doa (tekan & tahan)  
+7. Surat  
+8. Finale — *dari awal*
 
-**Langkah 1 selesai:** kerangka scene + tema + navigasi.
+**Status:** scene 1–8 sudah interaktif (konten bisa diedit di `js/config.js`).
 
 ## Cara isi konten
 
@@ -25,21 +25,25 @@ Edit `js/config.js`:
 
 ```js
 window.GEVI_CONFIG = {
-  recipientName: "Naya",
-  senderName: "Dimas",
-  age: 21,
-  darkText: "kok gelap ya…",
-  surpriseEyebrow: "Surprise",
-  surpriseTitle: "Kamu dibedain.",
-  // ...
+  recipientName: "Septi Ratna Sari",
+  age: 30,
+  darkText: "kok gelap ya sayang…",
+  surpriseTitle: "Selamat Ulang Tahun Sayangku",
+  music: { src: "assets/audio/ceritaku-ceritamu-clip.mp3" },
+  notes: ["...", "...", "..."],
+  cake: { image: "assets/images/cake.png", candleCount: 30 },
+  letterBody: "...",
+  finale: { line: "Untuk Septi Ratna Sari.", showAge: true },
 };
 ```
 
 ## Preview lokal
 
 ```bash
-npx --yes serve .
+npx --yes serve . -l 3456
 ```
+
+Buka `http://localhost:3456/`.
 
 ## Struktur
 

@@ -19,7 +19,7 @@ window.GEVI_CONFIG = {
 
   /**
    * Bunga untuk transisi antar scene (muncul acak).
-   * File di assets/images/flowers/ — hasil potongan Bunga.png tanpa latar hitam.
+   * File di assets/images/flowers/
    */
   flowers: {
     images: [
@@ -35,20 +35,35 @@ window.GEVI_CONFIG = {
       "assets/images/flowers/dahlia-pink.png",
       "assets/images/flowers/carnation-pink.png",
       "assets/images/flowers/hydrangea-pink.png",
+      "assets/images/flowers/carnation-white.png",
+      "assets/images/flowers/lotus-white.png",
+      "assets/images/flowers/plumeria-white.png",
+      "assets/images/flowers/lily-soft.png",
     ],
-    /** Kelopak sakura yang jatuh di scene meriah */
+    /** Kelopak sakura jatuh (hasil potongan Kelopak Sakura.png) — kecil & jarang */
     petals: [
-      "assets/images/flowers/sakura-petal-a-1.png",
-      "assets/images/flowers/sakura-petal-a-2.png",
-      "assets/images/flowers/sakura-petal-a-3.png",
-      "assets/images/flowers/sakura-petal-a-4.png",
-      "assets/images/flowers/sakura-petal-a-5.png",
-      "assets/images/flowers/sakura-petal-b-1.png",
-      "assets/images/flowers/sakura-petal-b-2.png",
-      "assets/images/flowers/sakura-petal-b-3.png",
-      "assets/images/flowers/sakura-petal-b-4.png",
-      "assets/images/flowers/sakura-petal-b-5.png",
+      "assets/images/flowers/petals/sakura-fall-01.png",
+      "assets/images/flowers/petals/sakura-fall-02.png",
+      "assets/images/flowers/petals/sakura-fall-03.png",
+      "assets/images/flowers/petals/sakura-fall-04.png",
+      "assets/images/flowers/petals/sakura-fall-05.png",
+      "assets/images/flowers/petals/sakura-fall-06.png",
+      "assets/images/flowers/petals/sakura-fall-07.png",
+      "assets/images/flowers/petals/sakura-fall-08.png",
+      "assets/images/flowers/petals/sakura-fall-09.png",
+      "assets/images/flowers/petals/sakura-fall-10.png",
+      "assets/images/flowers/petals/sakura-fall-11.png",
+      "assets/images/flowers/petals/sakura-fall-12.png",
+      "assets/images/flowers/petals/sakura-fall-13.png",
+      "assets/images/flowers/petals/sakura-fall-14.png",
+      "assets/images/flowers/petals/sakura-fall-15.png",
+      "assets/images/flowers/petals/sakura-fall-16.png",
+      "assets/images/flowers/petals/sakura-fall-17.png",
+      "assets/images/flowers/petals/sakura-fall-18.png",
     ],
+    petalCount: 8,
+    petalSizeMin: 0.55,
+    petalSizeMax: 0.95,
   },
 
   /**
@@ -84,21 +99,21 @@ window.GEVI_CONFIG = {
   },
 
   /**
-   * Catatan kecil (halaman) sebelum kue
+   * Catatan kecil — satu pesan utuh
+   * Format ringan: *miring* → <em>, **tebal** → <strong>
    */
-  notesIntro: "sebelum tiup lilin, baca yang tadi nggak muat.",
+  notesIntro: "sebelum lanjut, baca ini dulu…",
   notes: [
-    "Selamat ulang tahun untuk Septi Ratna Sari\nyang hari ini begitu istimewa. 🎂\n\nAku berharap hari ini tidak hanya menjadi tentang bertambahnya usia,\ntetapi juga tentang bertambahnya banyak bahagia dalam hidupmu.",
-    "Semoga setiap langkahmu dipertemukan dengan kebaikan,\nsetiap lelahmu menemukan alasan untuk bertahan,\ndan setiap harapanmu perlahan menemukan jalannya.\n\nHari ini kamu dirayakan.\nDan semoga kamu tahu,\ndi antara begitu banyak orang yang mendoakanmu,\nada seseorang yang menyayangimu\ndengan caranya sendiri, dengan tulus.",
-    "Semoga senyummu selalu menemukan alasannya,\nhatimu selalu menemukan ketenangannya,\ndan hidupmu selalu dipenuhi hal-hal yang membuatmu merasa dicintai.\n\nSelamat ulang tahun Sayangku, Cintaku, Kasihku, Pusat Tata Suryaku\nTetaplah menjadi kamu,\nkarena bagiku, kamu selalu punya tempat\nyang istimewa di hati ♥♥♥",
+    "Ada sesuatu untukmu… 🌷\n\nTidak besar, tidak sempurna,\nhanya sebuah kejutan kecil\nyang dibuat dengan banyak perhatian.\n\nKarena hari ini,\nada seseorang yang ingin memastikan\nbahwa kamu tahu…\n\n*kamu layak untuk dirayakan.* 💐\n\n*Let's celebrate you.* ✨",
   ],
   notesFinalButton: "sekarang… kue-nya",
 
-  /** Scene kue */
+  /** Scene kue — Tart.png, 1 lilin di tengah */
   cake: {
-    image: "assets/images/cake.png",
-    cardText: "Happy\nBirthday",
-    candleCount: 30,
+    image: "assets/images/cake-tart.png",
+    cardText: "",
+    showCardText: false,
+    candleCount: 1,
     caption: "sekarang bagian paling penting",
     hint: "tekan & tahan buat tiup lilinnya pelan-pelan",
     progressHint: "dikit lagi…",
@@ -106,9 +121,28 @@ window.GEVI_CONFIG = {
     holdMs: 2200,
   },
 
-  /** Preview surat (isi penuh di langkah berikutnya) */
-  letterPreview:
-    "Selamat ulang tahun. Semoga tahun ini lebih lembut ke kamu, dan lebih sering ada alasan buat kamu ngerasa dipilih.",
+  /** Scene doa — tekan & tahan */
+  wish: {
+    caption: "sebelum lanjut… tahan sejenak",
+    hint: "tekan & tahan sambil berdoa dalam hati",
+    progressHint: "pelan-pelan… biarkan doanya nyangkut",
+    doneHint: "semoga terkabul… lanjut ya",
+    holdMs: 2600,
+  },
+
+  /** Surat — pesan utuh (gabungan dari notes sebelumnya) */
+  letterLabel: "Untukmu",
+  letterBody:
+    "Selamat ulang tahun untuk Septi Ratna Sari\nyang hari ini begitu istimewa.\n\nAku berharap hari ini tidak hanya menjadi tentang bertambahnya usia,\ntetapi juga tentang bertambahnya banyak bahagia dalam hidupmu.\n\nSemoga setiap langkahmu dipertemukan dengan kebaikan,\nsetiap lelahmu menemukan alasan untuk bertahan,\ndan setiap harapanmu perlahan menemukan jalannya.\n\nHari ini kamu dirayakan.\nDan semoga kamu tahu,\ndi antara begitu banyak orang yang mendoakanmu,\nada seseorang yang menyayangimu\ndengan caranya sendiri, dengan tulus.\n\nSemoga senyummu selalu menemukan alasannya,\nhatimu selalu menemukan ketenangannya,\ndan hidupmu selalu dipenuhi hal-hal yang membuatmu merasa dicintai.\n\nSelamat ulang tahun Sayangku, Cintaku, Kasihku, Pusat Tata Suryaku.\nTetaplah menjadi kamu,\nkarena bagiku, kamu selalu punya tempat\nyang istimewa di hati ♥♥♥",
+  letterSign: "dengan tulus",
+
+  /** Finale */
+  finale: {
+    eyebrow: "Terima kasih sudah sampai sini",
+    line: "Untuk Septi Ratna Sari.",
+    showAge: true,
+    note: "Semoga harimu hangat, hatimu tenang,\ndan tahun ini penuh alasan untuk tersenyum.",
+  },
 
   /** Urutan scene — jangan diubah kecuali kamu paham alurnya */
   scenes: ["dark", "surprise", "record", "notes", "cake", "wish", "letter", "finale"],

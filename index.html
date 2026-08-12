@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#050506" />
     <meta name="description" content="Kartu ucapan ulang tahun interaktif dari GeVi" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23050506'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23C9A66B'/%3E%3C/svg%3E"
+    />
     <meta property="og:title" content="GeVi — Untukmu" />
     <meta property="og:description" content="Sebuah ruang kecil yang disiapkan diam-diam untuk hari spesialmu." />
     <meta property="og:type" content="website" />
@@ -142,7 +146,7 @@
             aria-label="Tekan dan tahan untuk meniup lilin"
           >
             <img id="cake-image" class="cake-image" src="assets/images/cake.png" alt="Kue ulang tahun" draggable="false" />
-            <span class="cake-card-text" id="cake-card-text">Happy Birthday</span>
+            <span class="cake-card-text" id="cake-card-text" hidden>Happy Birthday</span>
             <div class="cake-candles" id="cake-candles" aria-hidden="true"></div>
             <span class="cake-hold-ring" id="cake-hold-ring" aria-hidden="true"></span>
           </button>
@@ -151,34 +155,43 @@
         </div>
       </section>
 
-      <!-- 6. Doa (placeholder) -->
+      <!-- 6. Doa -->
       <section class="scene" data-scene="wish" hidden aria-label="Doa">
         <div class="scene-inner">
-          <p class="script-line">semoga terkabul</p>
-          <div class="wish-orb" aria-hidden="true"></div>
-          <p class="soft-line">Tahan layar sambil berdoa — langkah berikutnya</p>
-          <button type="button" class="btn-next" data-next>lanjut</button>
+          <p class="script-line" id="wish-caption">sebelum lanjut… tahan sejenak</p>
+          <button
+            type="button"
+            class="wish-orb"
+            id="wish-orb"
+            aria-label="Tekan dan tahan untuk berdoa"
+          >
+            <span class="wish-ring" aria-hidden="true"></span>
+            <span class="wish-core" aria-hidden="true"></span>
+          </button>
+          <p class="soft-line" id="wish-hint">tekan &amp; tahan sambil berdoa dalam hati</p>
+          <button type="button" class="btn-next" id="wish-next" data-next hidden>lanjut</button>
         </div>
       </section>
 
-      <!-- 7. Surat (placeholder) -->
+      <!-- 7. Surat -->
       <section class="scene" data-scene="letter" hidden aria-label="Surat">
         <div class="scene-inner scene-inner--wide">
           <article class="letter-sheet">
-            <p class="letter-body" id="letter-preview">
-              Surat panjang akan ditulis di langkah berikutnya.
-            </p>
+            <p class="letter-label" id="letter-label">Untukmu</p>
+            <p class="letter-body" id="letter-preview"></p>
             <p class="letter-sign" id="letter-sign"></p>
           </article>
           <button type="button" class="btn-next" data-next>lanjut</button>
         </div>
       </section>
 
-      <!-- 8. Finale (placeholder) -->
+      <!-- 8. Finale -->
       <section class="scene" data-scene="finale" hidden aria-label="Penutup">
         <div class="scene-inner">
+          <p class="eyebrow" id="finale-eyebrow">Terima kasih sudah sampai sini</p>
           <p class="display display--sm" id="finale-line">Untuk hari spesialmu.</p>
-          <p class="soft-line">Angka umur &amp; kenangan — langkah berikutnya</p>
+          <p class="script-name" id="finale-age" hidden></p>
+          <p class="soft-line" id="finale-note">Semoga harimu hangat, dan hatimu tenang.</p>
           <button type="button" class="btn-next" data-restart>dari awal</button>
         </div>
       </section>
