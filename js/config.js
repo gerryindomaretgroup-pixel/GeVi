@@ -92,7 +92,6 @@ window.GEVI_CONFIG = {
     notes: "assets/audio/sfx-note.mp3",
     sparkle: "assets/audio/sfx-sparkle.mp3",
     cake: "assets/audio/sfx-sparkle.mp3",
-    confetti: "assets/audio/sfx-confetti.mp3",
     wish: "assets/audio/sfx-wish.mp3",
     letter: "assets/audio/sfx-letter.mp3",
     finale: "assets/audio/sfx-finale.mp3",
@@ -122,42 +121,79 @@ window.GEVI_CONFIG = {
     candleLeft: "50%",
     candleSpread: 5.2,
     caption: "sekarang bagian paling penting",
-    waitHint: "sebentar… ada kejutan kecil",
-    confettiHint: "🎉",
-    revealHint: "kue ulang tahunmu…",
-    lightingHint: "nyalakan lilinnya…",
     hint: "tekan & tahan lilinnya agak lama buat meniup",
-    progressHint: "dikit lagi… tiup pelan-pelan",
-    doneHint: "lilinnya padam… lanjut ya",
     holdMs: 2200,
-    confettiMs: 5000,
-    confettiCount: 220,
-    revealMs: 1100,
-    lightingMs: 1400,
+    lightingMs: 1200,
   },
 
-  /** Scene doa — pejamkan mata, tombol lanjut muncul setelah waitMs */
+  /** Scene doa — tekan tahan, lalu gelembung bulat misteri */
   wish: {
     caption: "saatnya berdoa",
-    hint: "pejamkan matamu… dan berdoalah dalam hati sampai selesai",
-    progressHint: "pelan-pelan… biarkan doamu mengisi ruang ini",
-    almostHint: "sebentar lagi…",
-    doneHint: "semoga terkabul… lanjut ya",
-    waitMs: 30000,
+    hint: "tekan & tahan bola doa agak lama",
+    progressHint: "pelan-pelan… biarkan doamu mengisi",
+    almostHint: "hampir… jangan lepas dulu",
+    center: "ini doaku untukmu",
+    holdMs: 2800,
+    bubbles: [
+      "Semoga sehat selalu",
+      "Semoga bahagia selalu",
+      "Semoga rejekimu semakin dilimpahkan",
+      "Semoga semakin banyak orang yang sayang kamu",
+      "Semoga kamu menjadi wanita kuat",
+      "Semoga kamu menemukan pasangan hidup yang kamu harapkan",
+      "Semoga pasangan hidupmu itu aku",
+      "Semoga doa dan keinginanmu segera di kabulkan apapun itu",
+      "Semoga semua keluargamu diberikan banyak rejeki yang melimpah",
+      "I Love You",
+    ],
   },
 
   /** Surat — pesan utuh (gabungan dari notes sebelumnya) */
   letterLabel: "Untukmu",
   letterBody:
     "Selamat ulang tahun untuk Septi Ratna Sari\nyang hari ini begitu istimewa.\n\nAku berharap hari ini tidak hanya menjadi tentang bertambahnya usia,\ntetapi juga tentang bertambahnya banyak bahagia dalam hidupmu.\n\nSemoga setiap langkahmu dipertemukan dengan kebaikan,\nsetiap lelahmu menemukan alasan untuk bertahan,\ndan setiap harapanmu perlahan menemukan jalannya.\n\nHari ini kamu dirayakan.\nDan semoga kamu tahu,\ndi antara begitu banyak orang yang mendoakanmu,\nada seseorang yang menyayangimu\ndengan caranya sendiri, dengan tulus.\n\nSemoga senyummu selalu menemukan alasannya,\nhatimu selalu menemukan ketenangannya,\ndan hidupmu selalu dipenuhi hal-hal yang membuatmu merasa dicintai.\n\nSelamat ulang tahun Sayangku, Cintaku, Kasihku, Pusat Tata Suryaku.\nTetaplah menjadi kamu,\nkarena bagiku, kamu selalu punya tempat\nyang istimewa di hati ♥♥♥",
-  letterSign: "dengan tulus",
+  letterSign: "Mas Gerry",
 
-  /** Finale */
+  /**
+   * Scene penutup — swipe kenangan berbingkai.
+   * Ideal: 4–6 foto (boleh sampai 7 jika cerita mengalir).
+   * File di assets/images/memories/
+   */
   finale: {
-    eyebrow: "Terima kasih sudah sampai sini",
-    line: "Untuk Septi Ratna Sari.",
-    showAge: true,
-    note: "Semoga harimu hangat, hatimu tenang,\ndan tahun ini penuh alasan untuk tersenyum.",
+    caption: "kenangan kita",
+    hint: "geser ke kiri atau kanan",
+    thanks: "Terima kasih sudah membuka sampai akhir",
+    lightsOffLabel: "matikan lampu",
+    memories: [
+      {
+        src: "assets/images/memories/P1.jpeg",
+        caption: "Pertemuan pertama kita waktu itu, betapa bahagianya aku",
+      },
+      {
+        src: "assets/images/memories/P9.jpeg",
+        caption: "Ajakan pertama kamu untuk bermain bersama",
+      },
+      {
+        src: "assets/images/memories/P2.jpeg",
+        caption: "Mengunjungi tempat hits bersama kamu",
+      },
+      {
+        src: "assets/images/memories/P3.jpeg",
+        caption: "Photo Box Pertama Kita",
+      },
+      {
+        src: "assets/images/memories/P10.jpeg",
+        caption: "Mengunjungi pantai selepas pulang bertemu keluargamu",
+      },
+      {
+        src: "assets/images/memories/P8.jpeg",
+        caption: "Ayam pop pertama kamu di Pagi Sore",
+      },
+      {
+        src: "assets/images/memories/P7.jpeg",
+        caption: 'Katamu disini aku "kok kamu tau semuanya"',
+      },
+    ],
   },
 
   /** Urutan scene — jangan diubah kecuali kamu paham alurnya */

@@ -105,6 +105,7 @@
 
   function sfxForTransition(fromScene, toScene) {
     if (fromScene === "dark" && toScene === "surprise") return "light";
+    if (fromScene === "finale" && toScene === "dark") return "light";
     const conf = sfxConfig();
     if (conf[toScene]) return toScene;
     return "bloom";
@@ -147,7 +148,11 @@
 
     const cake = config.cake || {};
     setText("cake-caption", cake.caption || "sekarang bagian paling penting");
-    setText("cake-hint", cake.waitHint || cake.hint || "sebentar… ada kejutan kecil");
+    const cakeHint = document.getElementById("cake-hint");
+    if (cakeHint) {
+      cakeHint.hidden = true;
+      cakeHint.textContent = cake.hint || "tekan & tahan lilinnya agak lama buat meniup";
+    }
     const cakeCard = document.getElementById("cake-card-text");
     if (cakeCard) {
       const showCard = cake.showCardText === true && cake.cardText;
@@ -162,8 +167,9 @@
     setText("wish-caption", wish.caption || "saatnya berdoa");
     setText(
       "wish-hint",
-      wish.hint || "pejamkan matamu… dan berdoalah dalam hati sampai selesai"
+      wish.hint || "tekan & tahan bola doa agak lama"
     );
+    setText("wish-center", wish.center || "ini doaku untukmu");
 
     setText("letter-label", config.letterLabel || "Untukmu");
     renderLetterBody(config.letterBody || config.letterPreview || "");
@@ -171,17 +177,15 @@
     setText("letter-sign", letterFrom ? `— ${letterFrom}` : "");
 
     const finale = config.finale || {};
-    setText("finale-eyebrow", finale.eyebrow || "Terima kasih sudah sampai sini");
-    setText("finale-line", finale.line || `Untuk ${name}.`);
+    setText("finale-caption", finale.caption || "kenangan kita");
+    setText("memory-hint", finale.hint || "geser ke kiri atau kanan");
     setText(
-      "finale-note",
-      finale.note || "Semoga harimu hangat, dan hatimu tenang."
+      "finale-thanks",
+      finale.thanks || "Terima kasih sudah membuka sampai akhir"
     );
-    const finaleAge = document.getElementById("finale-age");
-    if (finaleAge) {
-      const showFinaleAge = finale.showAge !== false && age;
-      finaleAge.hidden = !showFinaleAge;
-      finaleAge.textContent = showFinaleAge ? `yang ke-${age}` : "";
+    const lightsOff = document.getElementById("lights-off");
+    if (lightsOff) {
+      lightsOff.textContent = finale.lightsOffLabel || "matikan lampu";
     }
   }
 
@@ -231,8 +235,8 @@
     if (btn) {
       const last = noteIndex >= list.length - 1;
       btn.textContent = last
-        ? config.notesFinalButton || "sekarang… kue-nya"
-        : "lanjut";
+        ? config.notesFinalButton || "Surprise"
+        : "Next";
       btn.dataset.notesAction = last ? "done" : "next";
     }
   }
@@ -260,7 +264,7 @@
   const cakeStage = document.getElementById("cake-stage");
   const cakeCandles = document.getElementById("cake-candles");
   const cakeNext = document.getElementById("cake-next");
-  const cakeConfetti = document.getElementById("cake-confetti");
+  const cakeHint = document.getElementById("cake-hint");
   let cakeBlown = false;
   let cakeHolding = false;
   let cakeReady = false;
@@ -282,90 +286,10 @@
     return id;
   }
 
-  function buildCakeConfetti() {
-    if (!cakeConfetti || reduceMotion) return;
-    cakeConfetti.innerHTML = "";
-    const cake = cakeConfig();
-    // Palet meriah seperti meriam confetti (referensi: magenta, cyan, biru, hijau, kuning, emas)
-    const colors = [
-      "#ff2d95",
-      "#ff4fd8",
-      "#00e5ff",
-      "#2f6bff",
-      "#1ed760",
-      "#ffe600",
-      "#ffd700",
-      "#ff9f1a",
-      "#ffffff",
-      "#b388ff",
-      "#00ffc6",
-      "#ff5c5c",
-      "#7c4dff",
-      "#f9a825",
-    ];
-    const foils = [
-      "linear-gradient(135deg, #fff7a8 0%, #ffd700 45%, #ff9f1a 100%)",
-      "linear-gradient(135deg, #ffffff 0%, #c0c7d2 45%, #8e9aaf 100%)",
-      "linear-gradient(135deg, #ffe0f2 0%, #ff2d95 50%, #c4007a 100%)",
-      "linear-gradient(135deg, #e0ffff 0%, #00e5ff 50%, #0088cc 100%)",
-    ];
-    // Ledakan bergilir pojok: kanan atas → kiri bawah → kiri atas → kanan bawah
-    // Arah sembur conical ke tengah layar (mirip meriam confetti)
-    const corners = [
-      { name: "tr", left: "100%", top: "0%", wave: 0, aim: 225 },
-      { name: "bl", left: "0%", top: "100%", wave: 1, aim: 45 },
-      { name: "tl", left: "0%", top: "0%", wave: 2, aim: 315 },
-      { name: "br", left: "100%", top: "100%", wave: 3, aim: 135 },
-    ];
-    const total = Math.max(200, Number(cake.confettiCount) || 220);
-    const perCorner = Math.ceil(total / corners.length);
-    const waveGap = 0.9;
-
-    corners.forEach((corner) => {
-      for (let i = 0; i < perCorner; i++) {
-        const bit = document.createElement("span");
-        const shapeRoll = Math.random();
-        const shape =
-          shapeRoll < 0.38 ? "rect" : shapeRoll < 0.68 ? "round" : "star";
-        bit.className = `confetti-bit from-corner corner-${corner.name} is-${shape}`;
-        bit.style.left = corner.left;
-        bit.style.top = corner.top;
-
-        // Cone spray: ±28° dari arah aim ke tengah
-        const angle = ((corner.aim + (Math.random() * 56 - 28)) * Math.PI) / 180;
-        const dist = 42 + Math.random() * 68;
-        bit.style.setProperty("--cx", `${Math.cos(angle) * dist}vw`);
-        bit.style.setProperty("--cy", `${Math.sin(angle) * dist}vh`);
-        bit.style.setProperty("--rot", `${Math.floor(Math.random() * 1400 - 700)}deg`);
-        bit.style.setProperty("--spin", `${720 + Math.floor(Math.random() * 720)}deg`);
-        bit.style.setProperty("--dur", `${1.7 + Math.random() * 1.5}s`);
-        bit.style.setProperty(
-          "--delay",
-          `${corner.wave * waveGap + Math.random() * 0.22}s`
-        );
-
-        if (Math.random() > 0.72) {
-          bit.style.background = foils[i % foils.length];
-          bit.classList.add("is-foil");
-        } else {
-          bit.style.background = colors[(i + corner.wave * 4) % colors.length];
-        }
-
-        if (shape === "rect") {
-          bit.style.width = `${4 + Math.random() * 7}px`;
-          bit.style.height = `${10 + Math.random() * 16}px`;
-        } else if (shape === "round") {
-          const s = `${5 + Math.random() * 8}px`;
-          bit.style.width = s;
-          bit.style.height = s;
-        } else {
-          const s = `${9 + Math.random() * 10}px`;
-          bit.style.width = s;
-          bit.style.height = s;
-        }
-        cakeConfetti.appendChild(bit);
-      }
-    });
+  function setCakeHint(text, visible) {
+    if (!cakeHint) return;
+    if (typeof text === "string") cakeHint.textContent = text;
+    cakeHint.hidden = !visible;
   }
 
   function buildCandles() {
@@ -440,10 +364,7 @@
     clearCakeIntroTimers();
     cakeReady = false;
     cakeHolding = false;
-    if (cakeConfetti) {
-      cakeConfetti.classList.remove("is-on");
-      cakeConfetti.innerHTML = "";
-    }
+    setCakeHint("", false);
   }
 
   function enableCakeBlow() {
@@ -453,7 +374,10 @@
       cakeStage.classList.add("is-ready");
     }
     const cake = cakeConfig();
-    setText("cake-hint", cake.hint || "tekan & tahan lilinnya agak lama buat meniup");
+    setCakeHint(
+      cake.hint || "tekan & tahan lilinnya agak lama buat meniup",
+      true
+    );
     playSfx("sparkle");
   }
 
@@ -463,27 +387,24 @@
     cakeHolding = false;
     cakeReady = false;
     const cake = cakeConfig();
+    const lightingMs = Number(cake.lightingMs) || 1200;
 
     if (cakeNext) cakeNext.hidden = true;
+    setCakeHint("", false);
     if (cakeStage) {
       cakeStage.disabled = true;
-      cakeStage.classList.remove("is-holding", "is-blown", "is-revealed", "is-ready");
-      cakeStage.classList.add("is-concealed");
+      cakeStage.classList.remove("is-holding", "is-blown", "is-ready");
+      cakeStage.classList.add("is-revealed");
     }
     if (cakeCandles) {
       cakeCandles.classList.add("is-unlit");
       cakeCandles.classList.remove("is-lighting", "is-lit");
     }
-    if (cakeConfetti) cakeConfetti.classList.remove("is-on");
 
-    setText("cake-hint", cake.waitHint || "sebentar… ada kejutan kecil");
     buildCandles();
+    playSfx("cake");
 
     if (reduceMotion) {
-      if (cakeStage) {
-        cakeStage.classList.remove("is-concealed");
-        cakeStage.classList.add("is-revealed");
-      }
       if (cakeCandles) {
         cakeCandles.classList.remove("is-unlit");
         cakeCandles.classList.add("is-lit");
@@ -492,57 +413,16 @@
       return;
     }
 
-    // 1) Confetti dulu — ledakan pojok bergilir + suara, ~5 detik
-    buildCakeConfetti();
-    if (cakeConfetti) cakeConfetti.classList.add("is-on");
-    setText("cake-hint", cake.confettiHint || "🎉");
-    playSfx("confetti");
-    // Suara tiap gelombang pojok
+    // Kue sudah tampil — nyalakan lilin, lalu siap ditiup
     scheduleCake(() => {
       if (scenesOrder[index] !== "cake") return;
-      playSfx("confetti");
-    }, 950);
-    scheduleCake(() => {
-      if (scenesOrder[index] !== "cake") return;
-      playSfx("sparkle");
-    }, 1900);
-    scheduleCake(() => {
-      if (scenesOrder[index] !== "cake") return;
-      playSfx("confetti");
-    }, 2850);
-    scheduleCake(() => {
-      if (scenesOrder[index] !== "cake") return;
-      playSfx("sparkle");
-    }, 3800);
-
-    const confettiMs = Number(cake.confettiMs) || 5000;
-    const revealMs = Number(cake.revealMs) || 1100;
-    const lightingMs = Number(cake.lightingMs) || 1400;
-
-    // 2) Kue muncul
-    scheduleCake(() => {
-      if (scenesOrder[index] !== "cake") return;
-      if (cakeConfetti) cakeConfetti.classList.remove("is-on");
-      setText("cake-hint", cake.revealHint || "kue ulang tahunmu…");
-      if (cakeStage) {
-        cakeStage.classList.remove("is-concealed");
-        cakeStage.classList.add("is-revealed");
-      }
-      playSfx("cake");
-    }, confettiMs);
-
-    // 3) Nyalakan lilin
-    scheduleCake(() => {
-      if (scenesOrder[index] !== "cake") return;
-      setText("cake-hint", cake.lightingHint || "nyalakan lilinnya…");
       if (cakeCandles) {
         cakeCandles.classList.remove("is-unlit");
         cakeCandles.classList.add("is-lighting");
       }
       playSfx("sparkle");
-    }, confettiMs + revealMs);
+    }, 280);
 
-    // 4) Siap ditiup
     scheduleCake(() => {
       if (scenesOrder[index] !== "cake") return;
       if (cakeCandles) {
@@ -550,7 +430,7 @@
         cakeCandles.classList.add("is-lit");
       }
       enableCakeBlow();
-    }, confettiMs + revealMs + lightingMs);
+    }, 280 + lightingMs);
   }
 
   function clearCakeHold() {
@@ -558,7 +438,10 @@
     window.clearTimeout(cakeHoldTimer);
     if (cakeStage && !cakeBlown) cakeStage.classList.remove("is-holding");
     if (!cakeBlown && cakeReady) {
-      setText("cake-hint", cakeConfig().hint || "tekan & tahan lilinnya agak lama buat meniup");
+      setCakeHint(
+        cakeConfig().hint || "tekan & tahan lilinnya agak lama buat meniup",
+        true
+      );
     }
   }
 
@@ -571,7 +454,8 @@
       cakeStage.classList.add("is-blown");
     }
     playSfx("sparkle");
-    setText("cake-hint", cakeConfig().doneHint || "lilinnya padam… lanjut ya");
+    // Hanya instruksi tiup yang ditampilkan; setelah padam cukup tombol lanjut
+    setCakeHint("", false);
     if (cakeNext) cakeNext.hidden = false;
   }
 
@@ -581,7 +465,10 @@
     cakeHolding = true;
     if (cakeStage) cakeStage.classList.add("is-holding");
     const holdMs = Number(cakeConfig().holdMs) || 2200;
-    setText("cake-hint", cakeConfig().progressHint || "dikit lagi… tiup pelan-pelan");
+    setCakeHint(
+      cakeConfig().hint || "tekan & tahan lilinnya agak lama buat meniup",
+      true
+    );
     window.clearTimeout(cakeHoldTimer);
     cakeHoldTimer = window.setTimeout(() => {
       if (cakeHolding) finishBlow();
@@ -602,79 +489,455 @@
     cakeStage.addEventListener("lostpointercapture", clearCakeHold);
   }
 
-  /* ——— Wish / timed prayer ——— */
+  /* ——— Wish / hold prayer + mystery bubbles ——— */
 
   const wishOrb = document.getElementById("wish-orb");
+  const wishPray = document.getElementById("wish-pray");
+  const wishField = document.getElementById("wish-field");
+  const wishBubbles = document.getElementById("wish-bubbles");
+  const wishFocus = document.getElementById("wish-focus");
+  const wishFocusCard = document.getElementById("wish-focus-card");
+  const wishFocusText = document.getElementById("wish-focus-text");
   const wishNext = document.getElementById("wish-next");
   let wishDone = false;
-  let wishWaitTimer = 0;
-  let wishTickTimer = 0;
+  let wishHolding = false;
+  let wishHoldTimer = 0;
+  let wishAlmostTimer = 0;
+  let wishNextTimer = 0;
+  let wishPopped = 0;
+  let wishTotal = 0;
 
   function wishConfig() {
     return config.wish || {};
   }
 
   function clearWishTimers() {
-    window.clearTimeout(wishWaitTimer);
-    window.clearInterval(wishTickTimer);
-    wishWaitTimer = 0;
-    wishTickTimer = 0;
+    window.clearTimeout(wishHoldTimer);
+    window.clearTimeout(wishAlmostTimer);
+    window.clearTimeout(wishNextTimer);
+    wishHoldTimer = 0;
+    wishAlmostTimer = 0;
+    wishNextTimer = 0;
+  }
+
+  function closeWishFocus() {
+    if (!wishFocus) return;
+    wishFocus.classList.remove("is-open");
+    wishFocus.hidden = true;
+    if (wishFocusText) wishFocusText.textContent = "";
+  }
+
+  function maybeShowWishNext() {
+    if (wishTotal <= 0 || wishPopped < wishTotal) return;
+    if (wishNext && wishNext.hidden) {
+      wishNext.hidden = false;
+      playSfx("sparkle");
+    }
+  }
+
+  function popWishBubble(btn) {
+    if (!btn || btn.classList.contains("is-popped") || btn.classList.contains("is-popping")) {
+      return false;
+    }
+    btn.classList.add("is-popping");
+    btn.disabled = true;
+    btn.setAttribute("aria-hidden", "true");
+    // Pecahan kecil di sekitar gelembung
+    for (let i = 0; i < 6; i++) {
+      const shard = document.createElement("span");
+      shard.className = "wish-bubble-shard";
+      const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 28 + Math.random() * 36;
+      shard.style.setProperty("--sx", `${Math.cos(angle) * dist}px`);
+      shard.style.setProperty("--sy", `${Math.sin(angle) * dist}px`);
+      shard.style.setProperty("--sdelay", `${i * 18}ms`);
+      btn.appendChild(shard);
+    }
+    window.setTimeout(() => {
+      btn.classList.remove("is-popping");
+      btn.classList.add("is-popped");
+      btn.hidden = true;
+    }, 420);
+    wishPopped += 1;
+    maybeShowWishNext();
+    return true;
+  }
+
+  function openWishFocus(text, btn) {
+    if (!wishFocus || !wishFocusText) return;
+    if (btn && (btn.classList.contains("is-popped") || btn.classList.contains("is-popping"))) {
+      return;
+    }
+    wishFocusText.textContent = text;
+    wishFocus.hidden = false;
+    void wishFocus.offsetWidth;
+    wishFocus.classList.add("is-open");
+    playSfx("wish");
+    if (btn) popWishBubble(btn);
+  }
+
+  function buildWishBubbles() {
+    if (!wishBubbles) return;
+    wishBubbles.innerHTML = "";
+    wishPopped = 0;
+    const wish = wishConfig();
+    const list = Array.isArray(wish.bubbles) ? wish.bubbles : [];
+    wishTotal = list.length;
+    const slots = [
+      { x: 10, y: 10, s: 1.05, d: 11, delay: 0 },
+      { x: 72, y: 8, s: 0.9, d: 13, delay: 0.4 },
+      { x: 86, y: 30, s: 1.15, d: 10, delay: 0.8 },
+      { x: 14, y: 36, s: 0.85, d: 14, delay: 1.1 },
+      { x: 48, y: 18, s: 1.0, d: 12, delay: 0.2 },
+      { x: 76, y: 56, s: 0.95, d: 15, delay: 1.5 },
+      { x: 8, y: 64, s: 1.1, d: 11.5, delay: 0.6 },
+      { x: 40, y: 62, s: 0.88, d: 13.5, delay: 1.8 },
+      { x: 62, y: 78, s: 1.2, d: 12.5, delay: 0.9 },
+      { x: 28, y: 82, s: 1.0, d: 14.5, delay: 1.3 },
+    ];
+
+    list.forEach((text, i) => {
+      const slot = slots[i % slots.length];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      const isLove = /i love you/i.test(text);
+      btn.className = `wish-bubble wish-bubble--${(i % 5) + 1}${isLove ? " is-love" : ""}`;
+      btn.style.setProperty("--bx", `${slot.x}%`);
+      btn.style.setProperty("--by", `${slot.y}%`);
+      btn.style.setProperty("--bs", String(slot.s));
+      btn.style.setProperty("--bdur", `${slot.d}s`);
+      btn.style.setProperty("--bdelay", `${slot.delay + i * 0.1}s`);
+      btn.style.setProperty("--bdrift", `${((i % 3) - 1) * 12}px`);
+      btn.dataset.message = text;
+      btn.setAttribute("aria-label", "Buka doa");
+      btn.innerHTML = '<span class="wish-bubble-shine" aria-hidden="true"></span>';
+      btn.addEventListener("click", () => openWishFocus(text, btn));
+      wishBubbles.appendChild(btn);
+    });
+  }
+
+  function revealWishBubbles() {
+    if (wishPray) wishPray.hidden = true;
+    if (wishOrb) {
+      wishOrb.classList.remove("is-praying", "is-holding");
+      wishOrb.classList.add("is-done");
+      wishOrb.disabled = true;
+    }
+    buildWishBubbles();
+    if (wishField) {
+      wishField.hidden = false;
+      wishField.classList.add("is-visible");
+    }
+    const caption = document.getElementById("wish-caption");
+    if (caption) caption.hidden = true;
+    playSfx("wish");
+    if (wishNext) {
+      wishNext.hidden = true;
+      wishNext.textContent = "Next";
+    }
+  }
+
+  function clearWishHold() {
+    wishHolding = false;
+    window.clearTimeout(wishHoldTimer);
+    window.clearTimeout(wishAlmostTimer);
+    if (wishOrb && !wishDone) wishOrb.classList.remove("is-holding");
+    if (!wishDone) {
+      setText(
+        "wish-hint",
+        wishConfig().hint || "tekan & tahan bola doa agak lama"
+      );
+    }
+  }
+
+  function startWishHold(event) {
+    if (scenesOrder[index] !== "wish" || wishDone) return;
+    unlockAudio();
+    wishHolding = true;
+    if (wishOrb) wishOrb.classList.add("is-holding");
+    const holdMs = Math.max(800, Number(wishConfig().holdMs) || 2800);
+    setText(
+      "wish-hint",
+      wishConfig().progressHint || "pelan-pelan… biarkan doamu mengisi"
+    );
+    window.clearTimeout(wishHoldTimer);
+    window.clearTimeout(wishAlmostTimer);
+    const almostAt = Math.max(400, holdMs - 700);
+    wishAlmostTimer = window.setTimeout(() => {
+      if (!wishHolding || wishDone) return;
+      setText("wish-hint", wishConfig().almostHint || "hampir… jangan lepas dulu");
+    }, almostAt);
+    wishHoldTimer = window.setTimeout(() => {
+      if (wishHolding) finishWish();
+    }, holdMs);
+    if (event && event.pointerId != null && wishOrb) {
+      try {
+        wishOrb.setPointerCapture(event.pointerId);
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   function leaveWishScene() {
     clearWishTimers();
-    if (wishOrb) wishOrb.classList.remove("is-holding", "is-done", "is-praying");
+    clearWishHold();
+    closeWishFocus();
+    wishDone = false;
+    if (wishOrb) {
+      wishOrb.disabled = false;
+      wishOrb.classList.remove("is-holding", "is-done", "is-praying");
+    }
+    if (wishPray) wishPray.hidden = false;
+    if (wishField) {
+      wishField.hidden = true;
+      wishField.classList.remove("is-visible");
+    }
+    if (wishBubbles) wishBubbles.innerHTML = "";
+    if (wishNext) wishNext.hidden = true;
+    wishPopped = 0;
+    wishTotal = 0;
+    const caption = document.getElementById("wish-caption");
+    if (caption) caption.hidden = false;
   }
 
   function enterWishScene() {
     clearWishTimers();
+    clearWishHold();
+    closeWishFocus();
     wishDone = false;
+    wishPopped = 0;
+    wishTotal = 0;
+    const wish = wishConfig();
+
+    if (wishPray) wishPray.hidden = false;
     if (wishOrb) {
+      wishOrb.disabled = false;
       wishOrb.classList.remove("is-holding", "is-done");
       wishOrb.classList.add("is-praying");
     }
-    if (wishNext) wishNext.hidden = true;
-    const wish = wishConfig();
+    if (wishField) {
+      wishField.hidden = true;
+      wishField.classList.remove("is-visible");
+    }
+    if (wishBubbles) wishBubbles.innerHTML = "";
+    if (wishNext) {
+      wishNext.hidden = true;
+      wishNext.textContent = "Next";
+    }
+    const caption = document.getElementById("wish-caption");
+    if (caption) caption.hidden = false;
+
     setText("wish-caption", wish.caption || "saatnya berdoa");
-    setText(
-      "wish-hint",
-      wish.hint || "pejamkan matamu… dan berdoalah dalam hati sampai selesai"
-    );
-
-    const waitMs = Math.max(1000, Number(wish.waitMs) || 30000);
-    const startedAt = Date.now();
-
-    // MDN: setTimeout menunda tombol lanjut; setInterval untuk update hint
-    wishTickTimer = window.setInterval(() => {
-      if (wishDone || scenesOrder[index] !== "wish") return;
-      const left = Math.max(0, waitMs - (Date.now() - startedAt));
-      const secs = Math.ceil(left / 1000);
-      if (secs <= 8) {
-        setText("wish-hint", wish.almostHint || "sebentar lagi…");
-      } else {
-        setText(
-          "wish-hint",
-          wish.progressHint || "pelan-pelan… biarkan doamu mengisi ruang ini"
-        );
-      }
-    }, 1000);
-
-    wishWaitTimer = window.setTimeout(() => {
-      finishWish();
-    }, waitMs);
+    setText("wish-hint", wish.hint || "tekan & tahan bola doa agak lama");
+    setText("wish-center", wish.center || "ini doaku untukmu");
+    if (wishOrb) {
+      const holdMs = Math.max(800, Number(wish.holdMs) || 2800);
+      wishOrb.style.setProperty("--wish-hold-ms", `${holdMs}ms`);
+    }
   }
 
   function finishWish() {
     if (wishDone) return;
     wishDone = true;
-    clearWishTimers();
-    if (wishOrb) {
-      wishOrb.classList.remove("is-praying", "is-holding");
-      wishOrb.classList.add("is-done");
+    wishHolding = false;
+    window.clearTimeout(wishHoldTimer);
+    if (wishOrb) wishOrb.classList.remove("is-holding");
+    revealWishBubbles();
+  }
+
+  if (wishOrb) {
+    wishOrb.addEventListener("pointerdown", startWishHold);
+    wishOrb.addEventListener("pointerup", clearWishHold);
+    wishOrb.addEventListener("pointercancel", clearWishHold);
+    wishOrb.addEventListener("lostpointercapture", clearWishHold);
+  }
+  if (wishFocus) {
+    wishFocus.addEventListener("click", (event) => {
+      if (event.target === wishFocus) closeWishFocus();
+    });
+  }
+  if (wishFocusCard) {
+    wishFocusCard.addEventListener("click", () => closeWishFocus());
+  }
+
+  /* ——— Finale / memory swipe + lights out ——— */
+
+  const memoryViewport = document.getElementById("memory-viewport");
+  const memoryTrack = document.getElementById("memory-track");
+  const memoryDots = document.getElementById("memory-dots");
+  const memoryPrev = document.getElementById("memory-prev");
+  const memoryNext = document.getElementById("memory-next");
+  const memoryHint = document.getElementById("memory-hint");
+  const finaleEnd = document.getElementById("finale-end");
+  const lightsOffBtn = document.getElementById("lights-off");
+  let memoryIndex = 0;
+  let memoryCount = 0;
+  let memoryScrollLock = false;
+
+  function finaleConfig() {
+    return config.finale || {};
+  }
+
+  function memoryList() {
+    const list = finaleConfig().memories;
+    return Array.isArray(list) ? list.filter((m) => m && m.src) : [];
+  }
+
+  function updateMemoryUi() {
+    if (memoryDots) {
+      [...memoryDots.querySelectorAll("span")].forEach((dot, i) => {
+        dot.classList.toggle("is-active", i === memoryIndex);
+      });
     }
-    playSfx("wish");
-    setText("wish-hint", wishConfig().doneHint || "semoga terkabul… lanjut ya");
-    if (wishNext) wishNext.hidden = false;
+    if (memoryPrev) memoryPrev.disabled = memoryIndex <= 0;
+    if (memoryNext) memoryNext.disabled = memoryIndex >= memoryCount - 1;
+    const atEnd = memoryCount > 0 && memoryIndex >= memoryCount - 1;
+    if (finaleEnd) finaleEnd.hidden = !atEnd;
+    if (memoryHint) memoryHint.hidden = atEnd;
+  }
+
+  function goMemory(index, { smooth = true, sfx = true } = {}) {
+    if (!memoryViewport || memoryCount <= 0) return;
+    const next = Math.max(0, Math.min(memoryCount - 1, index));
+    const changed = next !== memoryIndex;
+    memoryIndex = next;
+    const slide = memoryTrack?.children[memoryIndex];
+    if (slide) {
+      memoryScrollLock = true;
+      slide.scrollIntoView({
+        behavior: smooth && !reduceMotion ? "smooth" : "auto",
+        inline: "center",
+        block: "nearest",
+      });
+      window.setTimeout(() => {
+        memoryScrollLock = false;
+      }, smooth ? 380 : 40);
+    }
+    updateMemoryUi();
+    if (changed && sfx) playSfx("sparkle");
+  }
+
+  function syncMemoryFromScroll() {
+    if (!memoryViewport || !memoryTrack || memoryCount <= 0 || memoryScrollLock) return;
+    const slides = [...memoryTrack.children];
+    if (!slides.length) return;
+    const mid = memoryViewport.scrollLeft + memoryViewport.clientWidth / 2;
+    let best = 0;
+    let bestDist = Infinity;
+    slides.forEach((slide, i) => {
+      const center = slide.offsetLeft + slide.offsetWidth / 2;
+      const dist = Math.abs(center - mid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    if (best !== memoryIndex) {
+      memoryIndex = best;
+      updateMemoryUi();
+      playSfx("sparkle");
+    } else {
+      updateMemoryUi();
+    }
+  }
+
+  function buildMemories() {
+    if (!memoryTrack) return;
+    memoryTrack.innerHTML = "";
+    if (memoryDots) memoryDots.innerHTML = "";
+    const list = memoryList();
+    memoryCount = list.length;
+    memoryIndex = 0;
+
+    list.forEach((item, i) => {
+      const figure = document.createElement("figure");
+      figure.className = "memory-frame";
+      figure.setAttribute("aria-label", item.caption || `Kenangan ${i + 1}`);
+      const img = document.createElement("img");
+      img.src = item.src;
+      img.alt = item.caption || `Kenangan ${i + 1}`;
+      img.draggable = false;
+      img.decoding = "async";
+      figure.appendChild(img);
+      if (item.caption) {
+        const cap = document.createElement("figcaption");
+        cap.className = "memory-caption";
+        cap.textContent = item.caption;
+        figure.appendChild(cap);
+      }
+      memoryTrack.appendChild(figure);
+
+      if (memoryDots) {
+        const dot = document.createElement("span");
+        if (i === 0) dot.classList.add("is-active");
+        memoryDots.appendChild(dot);
+      }
+    });
+
+    if (memoryViewport) memoryViewport.scrollLeft = 0;
+    updateMemoryUi();
+  }
+
+  function enterFinaleScene() {
+    buildMemories();
+    goMemory(0, { smooth: false, sfx: false });
+  }
+
+  function leaveFinaleScene() {
+    if (finaleEnd) finaleEnd.hidden = true;
+    if (memoryHint) memoryHint.hidden = false;
+    memoryIndex = 0;
+  }
+
+  async function playLightsOut() {
+    playSfx("light");
+    document.body.classList.add("is-lights-out");
+    if (festoon) {
+      festoon.classList.remove("is-visible");
+      festoon.hidden = true;
+    }
+    await new Promise((r) => window.setTimeout(r, reduceMotion ? 180 : 780));
+  }
+
+  if (memoryPrev) {
+    memoryPrev.addEventListener("click", () => {
+      unlockAudio();
+      goMemory(memoryIndex - 1);
+    });
+  }
+  if (memoryNext) {
+    memoryNext.addEventListener("click", () => {
+      unlockAudio();
+      goMemory(memoryIndex + 1);
+    });
+  }
+  if (memoryViewport) {
+    let scrollTimer = 0;
+    memoryViewport.addEventListener(
+      "scroll",
+      () => {
+        window.clearTimeout(scrollTimer);
+        scrollTimer = window.setTimeout(syncMemoryFromScroll, 80);
+      },
+      { passive: true }
+    );
+    memoryViewport.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goMemory(memoryIndex - 1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goMemory(memoryIndex + 1);
+      }
+    });
+  }
+  if (lightsOffBtn) {
+    lightsOffBtn.addEventListener("click", () => {
+      unlockAudio();
+      if (scenesOrder[index] !== "finale") return;
+      restart();
+    });
   }
 
   function setText(id, value) {
@@ -959,6 +1222,12 @@
     } else {
       leaveWishScene();
     }
+
+    if (scenesOrder[index] === "finale") {
+      enterFinaleScene();
+    } else {
+      leaveFinaleScene();
+    }
   }
 
   async function showScene(nextIndex, { restart = false, transition = "none" } = {}) {
@@ -974,6 +1243,11 @@
     if (transition === "light") {
       await playLightReveal();
       await swapScene(nextIndex);
+    } else if (transition === "lightsOut") {
+      await playLightsOut();
+      await swapScene(nextIndex);
+      document.body.classList.remove("is-lights-out");
+      if (lightSwitch) lightSwitch.classList.remove("is-on");
     } else if (transition === "bloom") {
       // Bunga + SFX scene muncul bersamaan; bukan di jarum piringan
       await playBloomTransition(sfxKey === "light" ? "bloom" : sfxKey);
@@ -996,7 +1270,7 @@
   }
 
   function restart() {
-    showScene(0, { restart: true, transition: "bloom" });
+    showScene(0, { restart: true, transition: "lightsOut" });
   }
 
   /* ——— Record player / music ——— */
@@ -1264,6 +1538,9 @@
     if (event.target.closest("#record-skip")) return;
     if (event.target.closest("#notes-next")) return;
     if (event.target.closest("#cake-stage")) return;
+    if (event.target.closest("#wish-orb")) return;
+    if (event.target.closest("#memory-deck")) return;
+    if (event.target.closest("#lights-off")) return;
     const nextBtn = event.target.closest("[data-next]");
     const restartBtn = event.target.closest("[data-restart]");
     if (restartBtn) {
@@ -1278,6 +1555,10 @@
   getFlowerImages().forEach((src) => {
     const img = new Image();
     img.src = src;
+  });
+  memoryList().forEach((item) => {
+    const img = new Image();
+    img.src = item.src;
   });
 
   window.addEventListener("resize", () => {
