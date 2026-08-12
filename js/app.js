@@ -77,10 +77,18 @@
     if (!bgmAudio) return;
     const bgm = bgmConfig();
     if (!bgm.src) return;
+    bgmAudio.setAttribute("playsinline", "");
+    bgmAudio.setAttribute("webkit-playsinline", "");
+    bgmAudio.playsInline = true;
     if (bgmAudio.dataset.src !== bgm.src) {
       bgmAudio.src = bgm.src;
       bgmAudio.dataset.src = bgm.src;
       bgmAudio.preload = "auto";
+      try {
+        bgmAudio.load();
+      } catch {
+        /* ignore */
+      }
     }
     // Loop manual agar startAt & fade loop tetap sinkron (native loop selalu dari 0)
     bgmAudio.loop = false;
@@ -152,20 +160,30 @@
     // Jangan nyalakan lagi kalau sedang di-mute karena lagu record
     if (bgmDucked && !force) return false;
     if (musicPlaying && bgm.muteWhileRecord !== false && !force) return false;
-    const vol = Math.min(1, Math.max(0, Number(bgm.volume) || 0.16));
+    const vol = Math.min(1, Math.max(0, Number(bgm.volume) || 0.28));
     try {
+      // play() harus dipanggil sinkron dalam gesture (jangan await apa pun sebelumnya)
       if (bgmAudio.paused) {
-        bgmAudio.volume = 0;
         const startAt = bgmStartAt();
         if (startAt > 0 && bgmAudio.currentTime < 0.05) {
-          bgmAudio.currentTime = startAt;
+          try {
+            bgmAudio.currentTime = startAt;
+          } catch {
+            /* ignore seek until ready */
+          }
         }
-        await bgmAudio.play();
+        // Mulai dari volume target kecil supaya langsung terdengar jika fade gagal
+        bgmAudio.muted = false;
+        bgmAudio.volume = Math.min(vol, 0.05);
+        const playPromise = bgmAudio.play();
+        if (playPromise && typeof playPromise.then === "function") {
+          await playPromise;
+        }
       }
       if (!bgmDucked) {
-        await fadeBgmTo(vol, Number(bgm.fadeMs) || 1000);
+        await fadeBgmTo(vol, Number(bgm.fadeMs) || 700);
       }
-      return true;
+      return !bgmAudio.paused;
     } catch {
       return false;
     }
@@ -196,13 +214,17 @@
     if (musicPlaying && bgmConfig().muteWhileRecord !== false) return;
     bgmDucked = false;
     const bgm = bgmConfig();
-    const vol = Math.min(1, Math.max(0, Number(bgm.volume) || 0.16));
+    const vol = Math.min(1, Math.max(0, Number(bgm.volume) || 0.28));
     try {
       if (bgmAudio.paused) {
-        bgmAudio.volume = 0;
-        await bgmAudio.play();
+        bgmAudio.muted = false;
+        bgmAudio.volume = Math.min(vol, 0.05);
+        const playPromise = bgmAudio.play();
+        if (playPromise && typeof playPromise.then === "function") {
+          await playPromise;
+        }
       }
-      await fadeBgmTo(vol, Number(bgm.fadeMs) || 1000);
+      await fadeBgmTo(vol, Number(bgm.fadeMs) || 700);
     } catch {
       /* ignore */
     }
@@ -226,7 +248,7 @@
     }
   }
 
-  async function unlockAudio() {
+  function unlockAudio() {
     if (audioUnlocked) {
       // Interaksi berikutnya: pastikan BGM awal tetap jalan
       if (bgmConfig().playFromStart !== false && !musicPlaying) {
@@ -237,17 +259,7 @@
     audioUnlocked = true;
     preloadSfx();
     setupBgm();
-    // Warm-up silent play under user gesture (autoplay policy)
-    try {
-      const warm = new Audio(
-        "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAGAAGn9AAAIwgAJP8AAAD4AAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UMQZg8AAAaQAAAAAgAADSAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"
-      );
-      warm.volume = 0.01;
-      await warm.play();
-      warm.pause();
-    } catch {
-      /* still try later */
-    }
+    // Jangan await di sini — gesture user harus tetap valid untuk BGM play()
     if (bgmConfig().playFromStart !== false) {
       startBgm();
     }
@@ -1161,6 +1173,16 @@
         img.alt = item.caption || `Kenangan ${i + 1}`;
         img.draggable = false;
         img.decoding = "async";
+        const applyOrientation = () => {
+          if (!img.naturalWidth || !img.naturalHeight) return;
+          const landscape = img.naturalWidth >= img.naturalHeight;
+          figure.classList.toggle("is-landscape", landscape);
+          figure.classList.toggle("is-portrait", !landscape);
+          // Ikuti rasio asli supaya foto tidak terpotong
+          img.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+        };
+        if (img.complete && img.naturalWidth) applyOrientation();
+        else img.addEventListener("load", applyOrientation, { once: true });
         figure.appendChild(img);
       }
       if (item.caption) {
@@ -1913,8 +1935,16 @@
     unlockAudio();
     if (bgmConfig().playFromStart !== false) startBgm();
   };
-  ["pointerdown", "touchstart", "keydown"].forEach((evt) => {
+  ["pointerdown", "touchstart", "click", "keydown"].forEach((evt) => {
     document.addEventListener(evt, armEarlyBgm, { capture: true, passive: true });
+  });
+
+  // Setelah tab kembali / layar nyala: lanjutkan BGM jika seharusnya main
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    if (bgmWanted && !bgmDucked && !musicPlaying && bgmAudio && bgmAudio.paused) {
+      startBgm();
+    }
   });
 
   // Preload assets early; unlock still needs gesture

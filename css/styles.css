@@ -2113,9 +2113,22 @@ body {
 }
 
 .scene-inner--finale {
-  width: min(100%, 24rem);
+  width: min(100%, 26rem);
   gap: 0.75rem;
   justify-content: flex-start;
+}
+
+.finale-title {
+  margin: 0.15rem auto 0.1rem;
+  max-width: 12ch;
+  text-align: center;
+  font-family: var(--font-script);
+  font-size: clamp(1.35rem, 5.2vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--blush);
+  text-wrap: balance;
 }
 
 .memory-deck {
@@ -2164,6 +2177,11 @@ body {
   flex-direction: column;
 }
 
+.memory-frame.is-landscape {
+  flex-basis: min(88vw, 20.5rem);
+  width: min(88vw, 20.5rem);
+}
+
 .memory-frame:nth-child(odd) {
   --tilt: 1.4;
 }
@@ -2175,12 +2193,22 @@ body {
 .memory-frame img {
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
+  height: auto;
+  max-height: min(52vh, 21rem);
+  object-fit: contain;
+  object-position: center;
   border-radius: 0.1rem;
   background: #2a1a1c;
   pointer-events: none;
   user-select: none;
+}
+
+.memory-frame.is-landscape img {
+  max-height: min(42vh, 15.5rem);
+}
+
+.memory-frame.is-portrait img {
+  max-height: min(56vh, 22rem);
 }
 
 .memory-frame.is-empty .memory-empty {
@@ -2208,13 +2236,17 @@ body {
 }
 
 .memory-caption {
-  margin-top: 0.7rem;
-  padding: 0 0.15rem 0.15rem;
+  margin: 0.65rem auto 0.1rem;
+  padding: 0 0.45rem 0.1rem;
+  max-width: min(92%, 18rem);
   font-family: var(--font-display);
-  font-size: clamp(0.88rem, 3.6vw, 1rem);
+  font-size: clamp(0.84rem, 3.3vw, 0.98rem);
   font-style: italic;
-  line-height: 1.35;
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 0.01em;
   text-align: center;
+  text-wrap: balance;
   color: #5a4038;
 }
 

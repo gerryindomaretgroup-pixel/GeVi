@@ -86,10 +86,10 @@ window.GEVI_CONFIG = {
    */
   bgm: {
     src: "assets/audio/bgm-fallinlove.mp3",
-    /** Clip dari detik 58 lagu Fallin Love Again */
-    volume: 0.16,
+    /** Fallin Love Again — volume cukup terdengar di HP saat layar gelap */
+    volume: 0.28,
     duckVolume: 0,
-    fadeMs: 1000,
+    fadeMs: 700,
     loop: true,
     startAt: 0,
     playFromStart: true,
