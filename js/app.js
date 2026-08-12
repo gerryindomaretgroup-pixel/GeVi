@@ -279,14 +279,15 @@
       ).replace(/\D/g, "") || "30";
       const baseTop = cake.candleTop || "50%";
       const baseLeft = Number.parseFloat(cake.candleLeft) || 50.5;
-      // Sepasang angka di kiri-kanan kartu, di atas coklat tiramisu
-      const spread = Number(cake.candleSpread) || 11.5;
+      // Sepasang angka rapat sebagai "30" di tengah coklat tiramisu
+      const spread = Number(cake.candleSpread);
+      const gap = Number.isFinite(spread) ? spread : 5.2;
       const chars = [...digits];
       const mid = (chars.length - 1) / 2;
       chars.forEach((ch, i) => {
         const el = document.createElement("span");
         el.className = "candle candle--digit";
-        el.style.left = `${baseLeft + (i - mid) * spread}%`;
+        el.style.left = `${baseLeft + (i - mid) * gap}%`;
         el.style.top = baseTop;
         el.innerHTML =
           '<span class="candle-flame"></span><span class="candle-digit-face" aria-hidden="true"></span>';

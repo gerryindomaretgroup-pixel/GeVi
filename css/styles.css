@@ -1353,22 +1353,22 @@ body {
 
 .candle-digit-face {
   display: block;
-  min-width: 1.2rem;
+  min-width: 1.35rem;
   text-align: center;
   font-family: "Cormorant Garamond", var(--font-display), serif;
-  font-size: 1.85rem;
+  font-size: 2rem;
   font-weight: 700;
   line-height: 0.86;
   letter-spacing: -0.02em;
-  /* Putih-merah muda + outline gelap: kontras di coklat tiramisu */
-  color: #ffe3e8;
-  -webkit-text-stroke: 1.35px #4a1820;
+  /* Pink terang + outline gelap: kontras di coklat tiramisu */
+  color: #ffd6de;
+  -webkit-text-stroke: 1.4px #3a1018;
   paint-order: stroke fill;
   text-shadow:
-    0 0 1px #2a0c12,
+    0 0 1px #1a060a,
     0 1px 0 #6e2832,
     0 2px 0 #4a1820,
-    0 0 12px rgba(255, 150, 170, 0.45),
+    0 0 14px rgba(255, 140, 160, 0.55),
     0 8px 12px rgba(0, 0, 0, 0.55);
   padding: 0 0.02rem 0.05rem;
 }

@@ -116,10 +116,10 @@ window.GEVI_CONFIG = {
     /** "age" = lilin berbentuk angka umur; angka lain = jumlah lilin biasa */
     candleMode: "age",
     candleDigits: "",
-    /** Posisi di area coklat tiramisu — angka di kiri & kanan kartu */
-    candleTop: "51.5%",
-    candleLeft: "50.5%",
-    candleSpread: 24,
+    /** Posisi di TENGAH area coklat tiramisu (bukan di krim tepi) */
+    candleTop: "40.5%",
+    candleLeft: "50%",
+    candleSpread: 5.2,
     caption: "sekarang bagian paling penting",
     hint: "tekan & tahan buat tiup lilinnya pelan-pelan",
     progressHint: "dikit lagi…",
