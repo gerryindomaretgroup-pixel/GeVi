@@ -4,7 +4,8 @@
  */
 window.GEVI_CONFIG = {
   recipientName: "Septi Ratna Sari",
-  senderName: "",
+  /** Nama pengirim — muncul sebagai tanda tangan jika letterSign / invite.sign kosong */
+  senderName: "Mas Gerry",
   age: 30,
 
   /** Teks di layar gelap pembuka */
@@ -179,7 +180,8 @@ window.GEVI_CONFIG = {
   letterLabel: "Untukmu",
   letterBody:
     "Selamat ulang tahun untuk Septi Ratna Sari\nyang hari ini begitu istimewa.\n\nAku berharap hari ini tidak hanya menjadi tentang bertambahnya usia,\ntetapi juga tentang bertambahnya banyak bahagia dalam hidupmu.\n\nSemoga setiap langkahmu dipertemukan dengan kebaikan,\nsetiap lelahmu menemukan alasan untuk bertahan,\ndan setiap harapanmu perlahan menemukan jalannya.\n\nHari ini kamu dirayakan.\nDan semoga kamu tahu,\ndi antara begitu banyak orang yang mendoakanmu,\nada seseorang yang menyayangimu\ndengan caranya sendiri, dengan tulus.\n\nSemoga senyummu selalu menemukan alasannya,\nhatimu selalu menemukan ketenangannya,\ndan hidupmu selalu dipenuhi hal-hal yang membuatmu merasa dicintai.\n\nSelamat ulang tahun Sayangku, Cintaku, Kasihku, Pusat Tata Suryaku.\nTetaplah menjadi kamu,\nkarena bagiku, kamu selalu punya tempat\nyang istimewa di hati ♥♥♥",
-  letterSign: "Mas Gerry",
+  /** Kosong = pakai senderName di atas */
+  letterSign: "",
 
   /**
    * Scene penutup — swipe kenangan berbingkai.
@@ -240,7 +242,8 @@ window.GEVI_CONFIG = {
       label: "Special Invitation for You ✨",
       body:
         "Hari ini adalah harimu, tapi izinkan aku yang merayakannya.\n\nAku ingin mengajakmu makan siang bersama untuk merayakan bertambahnya usiamu, sebuah momen kecil untuk mengapresiasi hadirmu yang selalu bikin hariku lebih cerah.\n\n📅 Hari / Tanggal: Sabtu, 5 September 2026\n\n⏰ Waktu: Makan Siang (Lunch)\n\n📍 Tempat: A Surprise Destination Just for You\n\nWould you do me the honor of being my lunch date? 🍰",
-      sign: "Mas Gerry",
+      /** Kosong = pakai senderName di atas; tempat sengaja surprise sampai ada lokasi pasti */
+      sign: "",
     },
   },
 

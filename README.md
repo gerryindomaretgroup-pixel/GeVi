@@ -1,23 +1,23 @@
 # GeVi — Kartu Ucapan Ulang Tahun Interaktif
 
-Kartu ucapan ulang tahun multi-scene, tema **hitam romantis**. Dibuka di HP lewat link (setelah GitHub Pages aktif).
+Kartu ucapan ulang tahun multi-scene, tema **hitam romantis**. Dibuka di HP lewat link GitHub Pages.
 
 ## Link HP
 
 https://gerryindomaretgroup-pixel.github.io/GeVi/
 
-## Alur (setelah QR)
+## Alur
 
-1. Layar gelap → saklar lampu  
+1. Layar gelap → ketuk layar, lalu nyalakan lampu  
 2. Surprise  
-3. Suara (record player) — geser jarum / lewati  
-4. Catatan kecil (3 halaman)  
+3. Suara (record player) — geser jarum / dengar sampai habis  
+4. Catatan kecil  
 5. Kue + tiup lilin (tekan & tahan)  
-6. Lingkaran doa (tekan & tahan)  
+6. Lingkaran doa → gelembung doa  
 7. Surat  
-8. Finale — *dari awal*
+8. Finale — swipe kenangan → amplop undangan → **Aku Pasti Datang 💖**
 
-**Status:** scene 1–8 sudah interaktif (konten bisa diedit di `js/config.js`).
+**Status:** scene 1–8 interaktif. Konten diedit di `js/config.js`.
 
 ## Cara isi konten
 
@@ -26,14 +26,20 @@ Edit `js/config.js`:
 ```js
 window.GEVI_CONFIG = {
   recipientName: "Septi Ratna Sari",
+  senderName: "Mas Gerry", // tanda tangan surat & undangan (jika letterSign / invite.sign kosong)
   age: 30,
   darkText: "kok gelap ya sayang…",
   surpriseTitle: "Selamat Ulang Tahun Sayangku",
   music: { src: "assets/audio/ceritaku-ceritamu-clip.mp3" },
-  notes: ["...", "...", "..."],
-  cake: { image: "assets/images/cake.png", candleCount: 30 },
+  bgm: { src: "assets/audio/bgm-fallinlove.mp3", playFromStart: true },
+  notes: ["..."],
+  cake: { image: "assets/images/cake-tart.png", candleMode: "age" },
   letterBody: "...",
-  finale: { line: "Untuk Septi Ratna Sari.", showAge: true },
+  finale: {
+    lightsOffLabel: "Aku Pasti Datang 💖",
+    memories: [/* foto di assets/images/memories/ */],
+    invite: { /* teks undangan makan */ },
+  },
 };
 ```
 
