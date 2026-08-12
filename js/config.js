@@ -108,12 +108,17 @@ window.GEVI_CONFIG = {
   ],
   notesFinalButton: "sekarang… kue-nya",
 
-  /** Scene kue — Tart.png, 1 lilin di tengah */
+  /** Scene kue — Tart.png, lilin angka di area coklat (bukan di kartu) */
   cake: {
     image: "assets/images/cake-tart.png",
     cardText: "",
     showCardText: false,
-    candleCount: 1,
+    /** "age" = lilin berbentuk angka umur; angka lain = jumlah lilin biasa */
+    candleMode: "age",
+    candleDigits: "",
+    /** Posisi di atas area coklat kue (di depan kartu Happy Birthday) */
+    candleTop: "58%",
+    candleLeft: "50%",
     caption: "sekarang bagian paling penting",
     hint: "tekan & tahan buat tiup lilinnya pelan-pelan",
     progressHint: "dikit lagi…",
@@ -121,13 +126,14 @@ window.GEVI_CONFIG = {
     holdMs: 2200,
   },
 
-  /** Scene doa — tekan & tahan */
+  /** Scene doa — pejamkan mata, tombol lanjut muncul setelah waitMs */
   wish: {
-    caption: "sebelum lanjut… tahan sejenak",
-    hint: "tekan & tahan sambil berdoa dalam hati",
-    progressHint: "pelan-pelan… biarkan doanya nyangkut",
+    caption: "saatnya berdoa",
+    hint: "pejamkan matamu… dan berdoalah dalam hati sampai selesai",
+    progressHint: "pelan-pelan… biarkan doamu mengisi ruang ini",
+    almostHint: "sebentar lagi…",
     doneHint: "semoga terkabul… lanjut ya",
-    holdMs: 2600,
+    waitMs: 30000,
   },
 
   /** Surat — pesan utuh (gabungan dari notes sebelumnya) */

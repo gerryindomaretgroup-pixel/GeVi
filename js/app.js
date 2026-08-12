@@ -154,11 +154,14 @@
     }
     const cakeImg = document.getElementById("cake-image");
     if (cakeImg && cake.image) cakeImg.src = cake.image;
-    buildCandles(Number(cake.candleCount) || 1);
+    buildCandles();
 
     const wish = wishConfig();
-    setText("wish-caption", wish.caption || "sebelum lanjut… tahan sejenak");
-    setText("wish-hint", wish.hint || "tekan & tahan sambil berdoa dalam hati");
+    setText("wish-caption", wish.caption || "saatnya berdoa");
+    setText(
+      "wish-hint",
+      wish.hint || "pejamkan matamu… dan berdoalah dalam hati sampai selesai"
+    );
 
     setText("letter-label", config.letterLabel || "Untukmu");
     renderLetterBody(config.letterBody || config.letterPreview || "");
@@ -263,17 +266,39 @@
     return config.cake || {};
   }
 
-  function buildCandles(count) {
+  function buildCandles() {
     if (!cakeCandles) return;
     cakeCandles.innerHTML = "";
-    const n = Math.max(1, count | 0);
+    const cake = cakeConfig();
+    const mode = cake.candleMode || "age";
 
-    // Satu lilin mencolok di tengah atas kue
+    // Lilin berbentuk angka (default: umur) di area coklat kue
+    if (mode === "age" || mode === "digits") {
+      const digits = String(
+        cake.candleDigits || config.age || "30"
+      ).replace(/\D/g, "") || "30";
+      const wrap = document.createElement("div");
+      wrap.className = "candle-digits";
+      wrap.style.left = cake.candleLeft || "50%";
+      wrap.style.top = cake.candleTop || "47%";
+      [...digits].forEach((ch) => {
+        const el = document.createElement("span");
+        el.className = "candle candle--digit";
+        el.innerHTML =
+          '<span class="candle-flame"></span><span class="candle-digit-face" aria-hidden="true"></span>';
+        el.querySelector(".candle-digit-face").textContent = ch;
+        wrap.appendChild(el);
+      });
+      cakeCandles.appendChild(wrap);
+      return;
+    }
+
+    const n = Math.max(1, Number(cake.candleCount) || 1);
     if (n === 1) {
       const el = document.createElement("span");
       el.className = "candle candle--hero";
-      el.style.left = "50%";
-      el.style.top = "38%";
+      el.style.left = cake.candleLeft || "50%";
+      el.style.top = cake.candleTop || "47%";
       el.innerHTML = '<span class="candle-flame"></span>';
       cakeCandles.appendChild(el);
       return;
@@ -310,7 +335,7 @@
     if (cakeNext) cakeNext.hidden = true;
     const cake = cakeConfig();
     setText("cake-hint", cake.hint || "tekan & tahan buat tiup lilinnya pelan-pelan");
-    buildCandles(Number(cake.candleCount) || 1);
+    buildCandles();
   }
 
   function clearCakeHold() {
@@ -362,74 +387,79 @@
     cakeStage.addEventListener("lostpointercapture", clearCakeHold);
   }
 
-  /* ——— Wish / hold to pray ——— */
+  /* ——— Wish / timed prayer ——— */
 
   const wishOrb = document.getElementById("wish-orb");
   const wishNext = document.getElementById("wish-next");
   let wishDone = false;
-  let wishHolding = false;
-  let wishHoldTimer = 0;
+  let wishWaitTimer = 0;
+  let wishTickTimer = 0;
 
   function wishConfig() {
     return config.wish || {};
   }
 
-  function enterWishScene() {
-    wishDone = false;
-    wishHolding = false;
-    if (wishOrb) wishOrb.classList.remove("is-holding", "is-done");
-    if (wishNext) wishNext.hidden = true;
-    setText("wish-caption", wishConfig().caption || "sebelum lanjut… tahan sejenak");
-    setText("wish-hint", wishConfig().hint || "tekan & tahan sambil berdoa dalam hati");
+  function clearWishTimers() {
+    window.clearTimeout(wishWaitTimer);
+    window.clearInterval(wishTickTimer);
+    wishWaitTimer = 0;
+    wishTickTimer = 0;
   }
 
-  function clearWishHold() {
-    wishHolding = false;
-    window.clearTimeout(wishHoldTimer);
-    if (wishOrb && !wishDone) wishOrb.classList.remove("is-holding");
-    if (!wishDone) {
-      setText("wish-hint", wishConfig().hint || "tekan & tahan sambil berdoa dalam hati");
+  function leaveWishScene() {
+    clearWishTimers();
+    if (wishOrb) wishOrb.classList.remove("is-holding", "is-done", "is-praying");
+  }
+
+  function enterWishScene() {
+    clearWishTimers();
+    wishDone = false;
+    if (wishOrb) {
+      wishOrb.classList.remove("is-holding", "is-done");
+      wishOrb.classList.add("is-praying");
     }
+    if (wishNext) wishNext.hidden = true;
+    const wish = wishConfig();
+    setText("wish-caption", wish.caption || "saatnya berdoa");
+    setText(
+      "wish-hint",
+      wish.hint || "pejamkan matamu… dan berdoalah dalam hati sampai selesai"
+    );
+
+    const waitMs = Math.max(1000, Number(wish.waitMs) || 30000);
+    const startedAt = Date.now();
+
+    // MDN: setTimeout menunda tombol lanjut; setInterval untuk update hint
+    wishTickTimer = window.setInterval(() => {
+      if (wishDone || scenesOrder[index] !== "wish") return;
+      const left = Math.max(0, waitMs - (Date.now() - startedAt));
+      const secs = Math.ceil(left / 1000);
+      if (secs <= 8) {
+        setText("wish-hint", wish.almostHint || "sebentar lagi…");
+      } else {
+        setText(
+          "wish-hint",
+          wish.progressHint || "pelan-pelan… biarkan doamu mengisi ruang ini"
+        );
+      }
+    }, 1000);
+
+    wishWaitTimer = window.setTimeout(() => {
+      finishWish();
+    }, waitMs);
   }
 
   function finishWish() {
     if (wishDone) return;
     wishDone = true;
-    wishHolding = false;
+    clearWishTimers();
     if (wishOrb) {
-      wishOrb.classList.remove("is-holding");
+      wishOrb.classList.remove("is-praying", "is-holding");
       wishOrb.classList.add("is-done");
     }
     playSfx("wish");
     setText("wish-hint", wishConfig().doneHint || "semoga terkabul… lanjut ya");
     if (wishNext) wishNext.hidden = false;
-  }
-
-  function startWishHold(event) {
-    if (scenesOrder[index] !== "wish" || wishDone) return;
-    unlockAudio();
-    wishHolding = true;
-    if (wishOrb) wishOrb.classList.add("is-holding");
-    const holdMs = Number(wishConfig().holdMs) || 2600;
-    setText("wish-hint", wishConfig().progressHint || "pelan-pelan… biarkan doanya nyangkut");
-    window.clearTimeout(wishHoldTimer);
-    wishHoldTimer = window.setTimeout(() => {
-      if (wishHolding) finishWish();
-    }, holdMs);
-    if (event && event.pointerId != null && wishOrb) {
-      try {
-        wishOrb.setPointerCapture(event.pointerId);
-      } catch {
-        /* ignore */
-      }
-    }
-  }
-
-  if (wishOrb) {
-    wishOrb.addEventListener("pointerdown", startWishHold);
-    wishOrb.addEventListener("pointerup", clearWishHold);
-    wishOrb.addEventListener("pointercancel", clearWishHold);
-    wishOrb.addEventListener("lostpointercapture", clearWishHold);
   }
 
   function setText(id, value) {
@@ -709,6 +739,8 @@
 
     if (scenesOrder[index] === "wish") {
       enterWishScene();
+    } else {
+      leaveWishScene();
     }
   }
 
@@ -1015,7 +1047,6 @@
     if (event.target.closest("#record-skip")) return;
     if (event.target.closest("#notes-next")) return;
     if (event.target.closest("#cake-stage")) return;
-    if (event.target.closest("#wish-orb")) return;
     const nextBtn = event.target.closest("[data-next]");
     const restartBtn = event.target.closest("[data-restart]");
     if (restartBtn) {

@@ -1325,6 +1325,75 @@ body {
   animation-duration: 0.9s;
 }
 
+.candle-digits {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.35rem;
+  transform: translate(-50%, -100%);
+  z-index: 5;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+
+.candle--digit {
+  position: relative;
+  width: auto;
+  height: auto;
+  margin: 0;
+  left: auto;
+  top: auto;
+  transform: none;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.candle-digit-face {
+  display: block;
+  min-width: 1.45rem;
+  text-align: center;
+  font-family: "Cormorant Garamond", var(--font-display), serif;
+  font-size: 2.15rem;
+  font-weight: 600;
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  color: #fff4e4;
+  -webkit-text-stroke: 1px rgba(154, 115, 64, 0.55);
+  text-shadow:
+    0 1px 0 #e6c48a,
+    0 2px 0 #c9a066,
+    0 3px 0 #a8793d,
+    0 0 12px rgba(255, 210, 140, 0.45),
+    0 10px 16px rgba(0, 0, 0, 0.4);
+  padding: 0 0.02rem 0.08rem;
+}
+
+.candle--digit .candle-flame {
+  position: relative;
+  left: auto;
+  top: auto;
+  margin: 0 0 0.05rem;
+  width: 0.62rem;
+  height: 0.95rem;
+  background: radial-gradient(circle at 40% 70%, #fff7d2, #ff9a3c 48%, #e04520 70%, transparent 78%);
+  box-shadow:
+    0 0 14px rgba(255, 170, 70, 0.9),
+    0 0 28px rgba(255, 120, 40, 0.45);
+  animation-name: candle-flicker-hero;
+  animation-duration: 0.85s;
+}
+
+.cake-stage.is-blown .candle-digits {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25)) grayscale(0.15);
+}
+
+.cake-stage.is-blown .candle--digit::after {
+  content: none;
+}
+
 .candle-flame {
   position: absolute;
   left: 50%;
@@ -1490,7 +1559,7 @@ body {
   border: 0;
   background: transparent;
   padding: 0;
-  cursor: pointer;
+  cursor: default;
   touch-action: none;
   width: 8.5rem;
   height: 8.5rem;
@@ -1499,6 +1568,7 @@ body {
   position: relative;
   display: grid;
   place-items: center;
+  pointer-events: none;
 }
 
 .wish-ring {
@@ -1521,6 +1591,20 @@ body {
   transition: transform 0.35s, box-shadow 0.35s, opacity 0.35s;
 }
 
+.wish-orb.is-praying .wish-ring {
+  border-color: rgba(232, 196, 192, 0.7);
+  box-shadow:
+    0 0 55px rgba(201, 166, 107, 0.32),
+    inset 0 0 36px rgba(232, 196, 192, 0.14);
+  animation: wish-pulse 2.4s ease-in-out infinite;
+}
+
+.wish-orb.is-praying .wish-core {
+  transform: scale(1.2);
+  box-shadow: 0 0 26px rgba(232, 196, 192, 0.65);
+  animation: wish-core-glow 2.4s ease-in-out infinite;
+}
+
 .wish-orb.is-holding .wish-ring {
   border-color: rgba(232, 196, 192, 0.75);
   box-shadow:
@@ -1539,12 +1623,14 @@ body {
   box-shadow:
     0 0 60px rgba(196, 120, 122, 0.28),
     inset 0 0 40px rgba(201, 166, 107, 0.18);
+  animation: none;
 }
 
 .wish-orb.is-done .wish-core {
   transform: scale(1.55);
   opacity: 0.95;
   box-shadow: 0 0 34px rgba(232, 196, 192, 0.85);
+  animation: none;
 }
 
 @keyframes wish-pulse {
@@ -1554,6 +1640,18 @@ body {
   }
   50% {
     transform: scale(1.06);
+  }
+}
+
+@keyframes wish-core-glow {
+  0%,
+  100% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
   }
 }
 
