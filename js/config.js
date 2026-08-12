@@ -131,7 +131,7 @@ window.GEVI_CONFIG = {
     doneHint: "lilinnya padam… lanjut ya",
     holdMs: 2200,
     confettiMs: 5000,
-    confettiCount: 140,
+    confettiCount: 220,
     revealMs: 1100,
     lightingMs: 1400,
   },

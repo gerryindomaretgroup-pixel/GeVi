@@ -286,63 +286,83 @@
     if (!cakeConfetti || reduceMotion) return;
     cakeConfetti.innerHTML = "";
     const cake = cakeConfig();
+    // Palet meriah seperti meriam confetti (referensi: magenta, cyan, biru, hijau, kuning, emas)
     const colors = [
-      "#ff6b6b",
-      "#ffd93d",
-      "#6bcB77",
-      "#4d96ff",
-      "#ff8fab",
-      "#c9a66b",
+      "#ff2d95",
+      "#ff4fd8",
+      "#00e5ff",
+      "#2f6bff",
+      "#1ed760",
+      "#ffe600",
+      "#ffd700",
+      "#ff9f1a",
       "#ffffff",
       "#b388ff",
-      "#ff9f43",
-      "#48dbfb",
-      "#f368e0",
-      "#e8c4c0",
-      "#20c997",
-      "#feca57",
+      "#00ffc6",
+      "#ff5c5c",
+      "#7c4dff",
+      "#f9a825",
     ];
-    // Urutan ledakan pojok bergantian (MDN: animation-delay)
+    const foils = [
+      "linear-gradient(135deg, #fff7a8 0%, #ffd700 45%, #ff9f1a 100%)",
+      "linear-gradient(135deg, #ffffff 0%, #c0c7d2 45%, #8e9aaf 100%)",
+      "linear-gradient(135deg, #ffe0f2 0%, #ff2d95 50%, #c4007a 100%)",
+      "linear-gradient(135deg, #e0ffff 0%, #00e5ff 50%, #0088cc 100%)",
+    ];
+    // Ledakan bergilir pojok: kanan atas → kiri bawah → kiri atas → kanan bawah
+    // Arah sembur conical ke tengah layar (mirip meriam confetti)
     const corners = [
-      { name: "tr", left: "92%", top: "6%", wave: 0 },
-      { name: "bl", left: "8%", top: "92%", wave: 1 },
-      { name: "tl", left: "8%", top: "6%", wave: 2 },
-      { name: "br", left: "92%", top: "92%", wave: 3 },
+      { name: "tr", left: "100%", top: "0%", wave: 0, aim: 225 },
+      { name: "bl", left: "0%", top: "100%", wave: 1, aim: 45 },
+      { name: "tl", left: "0%", top: "0%", wave: 2, aim: 315 },
+      { name: "br", left: "100%", top: "100%", wave: 3, aim: 135 },
     ];
-    const perCorner = Math.max(24, Math.floor((Number(cake.confettiCount) || 140) / corners.length));
-    const waveGap = 0.95; // detik antar pojok
+    const total = Math.max(200, Number(cake.confettiCount) || 220);
+    const perCorner = Math.ceil(total / corners.length);
+    const waveGap = 0.9;
 
     corners.forEach((corner) => {
       for (let i = 0; i < perCorner; i++) {
         const bit = document.createElement("span");
-        bit.className = `confetti-bit from-corner corner-${corner.name}`;
+        const shapeRoll = Math.random();
+        const shape =
+          shapeRoll < 0.38 ? "rect" : shapeRoll < 0.68 ? "round" : "star";
+        bit.className = `confetti-bit from-corner corner-${corner.name} is-${shape}`;
         bit.style.left = corner.left;
         bit.style.top = corner.top;
-        // Sembur keluar dari pojok ke arah tengah/layar
-        const angleBase =
-          corner.name === "tr"
-            ? 200
-            : corner.name === "bl"
-              ? 20
-              : corner.name === "tl"
-                ? 340
-                : 160;
-        const angle = ((angleBase + (Math.random() * 70 - 35)) * Math.PI) / 180;
-        const dist = 38 + Math.random() * 55;
-        const sprayX = Math.cos(angle) * dist;
-        const sprayY = Math.sin(angle) * dist;
-        bit.style.setProperty("--cx", `${sprayX}vw`);
-        bit.style.setProperty("--cy", `${sprayY}vh`);
-        bit.style.setProperty("--rot", `${Math.floor(Math.random() * 1080 - 540)}deg`);
-        bit.style.setProperty("--dur", `${1.5 + Math.random() * 1.4}s`);
+
+        // Cone spray: ±28° dari arah aim ke tengah
+        const angle = ((corner.aim + (Math.random() * 56 - 28)) * Math.PI) / 180;
+        const dist = 42 + Math.random() * 68;
+        bit.style.setProperty("--cx", `${Math.cos(angle) * dist}vw`);
+        bit.style.setProperty("--cy", `${Math.sin(angle) * dist}vh`);
+        bit.style.setProperty("--rot", `${Math.floor(Math.random() * 1400 - 700)}deg`);
+        bit.style.setProperty("--spin", `${720 + Math.floor(Math.random() * 720)}deg`);
+        bit.style.setProperty("--dur", `${1.7 + Math.random() * 1.5}s`);
         bit.style.setProperty(
           "--delay",
-          `${corner.wave * waveGap + Math.random() * 0.28}s`
+          `${corner.wave * waveGap + Math.random() * 0.22}s`
         );
-        bit.style.background = colors[(i + corner.wave * 3) % colors.length];
-        bit.style.width = `${5 + Math.random() * 10}px`;
-        bit.style.height = `${6 + Math.random() * 12}px`;
-        if (Math.random() > 0.5) bit.classList.add("is-round");
+
+        if (Math.random() > 0.72) {
+          bit.style.background = foils[i % foils.length];
+          bit.classList.add("is-foil");
+        } else {
+          bit.style.background = colors[(i + corner.wave * 4) % colors.length];
+        }
+
+        if (shape === "rect") {
+          bit.style.width = `${4 + Math.random() * 7}px`;
+          bit.style.height = `${10 + Math.random() * 16}px`;
+        } else if (shape === "round") {
+          const s = `${5 + Math.random() * 8}px`;
+          bit.style.width = s;
+          bit.style.height = s;
+        } else {
+          const s = `${9 + Math.random() * 10}px`;
+          bit.style.width = s;
+          bit.style.height = s;
+        }
         cakeConfetti.appendChild(bit);
       }
     });

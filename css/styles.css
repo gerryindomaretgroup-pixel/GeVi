@@ -1259,46 +1259,72 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  border-radius: 2px;
+  border-radius: 1px;
   opacity: 0;
   will-change: transform, opacity;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
 }
 
 .confetti-bit.is-round {
   border-radius: 50%;
 }
 
+.confetti-bit.is-star {
+  border-radius: 0;
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}
+
+.confetti-bit.is-foil {
+  box-shadow:
+    0 0 12px rgba(255, 255, 255, 0.65),
+    0 0 4px rgba(255, 215, 0, 0.45);
+}
+
 .cake-confetti.is-on .confetti-bit.from-corner {
-  animation: confetti-corner-burst var(--dur, 2s) cubic-bezier(0.12, 0.75, 0.2, 1) both;
+  animation: confetti-cannon-burst var(--dur, 2.1s) cubic-bezier(0.08, 0.72, 0.16, 1) both;
   animation-delay: var(--delay, 0s);
 }
 
-@keyframes confetti-corner-burst {
+@keyframes confetti-cannon-burst {
   0% {
     opacity: 0;
-    transform: translate3d(-50%, -50%, 0) scale(0.2) rotate(0deg);
+    transform: translate3d(-50%, -50%, 0) scale(0.15) rotate(0deg);
+    filter: brightness(1.6);
   }
-  10% {
+  8% {
     opacity: 1;
     transform: translate3d(
-        calc(-50% + var(--cx, 10vw) * 0.2),
-        calc(-50% + var(--cy, 10vh) * 0.2),
+        calc(-50% + var(--cx, 20vw) * 0.18),
+        calc(-50% + var(--cy, 20vh) * 0.18),
         0
       )
-      scale(1.25) rotate(calc(var(--rot, 360deg) * 0.15));
+      scale(1.35) rotate(calc(var(--spin, 720deg) * 0.12));
+    filter: brightness(1.35);
   }
-  55% {
+  45% {
     opacity: 1;
+    filter: brightness(1.05);
   }
   100% {
     opacity: 0;
     transform: translate3d(
-        calc(-50% + var(--cx, 40vw)),
-        calc(-50% + var(--cy, 40vh)),
+        calc(-50% + var(--cx, 50vw)),
+        calc(-50% + var(--cy, 50vh)),
         0
       )
-      scale(0.8) rotate(var(--rot, 360deg));
+      scale(0.75) rotate(var(--spin, 720deg));
+    filter: brightness(0.95);
   }
 }
 
