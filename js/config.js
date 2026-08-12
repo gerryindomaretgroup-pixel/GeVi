@@ -9,7 +9,7 @@ window.GEVI_CONFIG = {
 
   /** Teks di layar gelap pembuka */
   darkText: "kok gelap ya sayang…",
-  switchHint: "nyalakan lampunya",
+  switchHint: "ketuk layar, lalu nyalakan lampunya",
 
   /** Surprise */
   surpriseEyebrow: "",
@@ -40,7 +40,7 @@ window.GEVI_CONFIG = {
       "assets/images/flowers/plumeria-white.png",
       "assets/images/flowers/lily-soft.png",
     ],
-    /** Kelopak sakura jatuh (hasil potongan Kelopak Sakura.png) — kecil & jarang */
+    /** Kelopak sakura jatuh — potongan dari SAKURA.png + NEW SAKURA.jpg */
     petals: [
       "assets/images/flowers/petals/sakura-fall-01.png",
       "assets/images/flowers/petals/sakura-fall-02.png",
@@ -58,8 +58,6 @@ window.GEVI_CONFIG = {
       "assets/images/flowers/petals/sakura-fall-14.png",
       "assets/images/flowers/petals/sakura-fall-15.png",
       "assets/images/flowers/petals/sakura-fall-16.png",
-      "assets/images/flowers/petals/sakura-fall-17.png",
-      "assets/images/flowers/petals/sakura-fall-18.png",
     ],
     petalCount: 8,
     petalSizeMin: 0.55,
@@ -81,35 +79,47 @@ window.GEVI_CONFIG = {
   },
 
   /**
-   * Musik latar lembut dari awal (setelah lampu nyala) sampai akhir.
-   * Saat piringan berputar, BGM di-duck supaya tidak tabrakan.
-   * Rekomendasi pengganti (file sendiri di assets/audio/):
-   * - soft piano / lo-fi tanpa lirik
-   * - instrumental romantis pelan (bukan lagu vokal penuh)
-   * - ambient warm pad
+   * Musik latar — Fallin Love Again (potongan detik 58 → akhir), loop halus.
+   * playFromStart: true = BGM sudah main di layar gelap (sebelum saklar).
+   * muteWhileRecord: true = BGM mati saat lagu piringan (scene 3) diputar, nyala lagi setelah selesai.
    */
   bgm: {
-    src: "assets/audio/bgm-soft-warm.mp3",
-    volume: 0.26,
+    src: "assets/audio/bgm-fallinlove.mp3",
+    /** Clip dari detik 58 lagu Fallin Love Again */
+    volume: 0.16,
     duckVolume: 0,
-    fadeMs: 900,
+    fadeMs: 1000,
     loop: true,
+    startAt: 0,
+    playFromStart: true,
+    muteWhileRecord: true,
   },
 
   /**
-   * Efek suara saat ganti scene (from → sfx)
-   * dark→surprise memakai light; scene lain memakai key di bawah.
+   * Efek suara
+   * - to_*: khusus ganti scene (bukan note/sparkle)
+   * - notes / sparkle / cake / needle / bubble*: khusus interaksi perintah
    */
   sfx: {
     light: "assets/audio/sfx-light.mp3",
     bloom: "assets/audio/sfx-bloom.mp3",
+    /** Default ganti scene */
+    transition: "assets/audio/sfx-soft-swipe.mp3",
+    to_surprise: "assets/audio/sfx-bloom.mp3",
+    to_record: "assets/audio/sfx-whoosh.mp3",
+    to_notes: "assets/audio/sfx-soft-swipe.mp3",
+    to_cake: "assets/audio/sfx-chime.mp3",
+    to_wish: "assets/audio/sfx-whoosh.mp3",
+    to_letter: "assets/audio/sfx-letter.mp3",
+    to_finale: "assets/audio/sfx-finale.mp3",
+
+    /** Interaksi perintah saja */
     needle: "assets/audio/sfx-needle.mp3",
-    surprise: "assets/audio/sfx-bloom.mp3",
-    record: "assets/audio/sfx-bloom.mp3",
     notes: "assets/audio/sfx-note.mp3",
     sparkle: "assets/audio/sfx-sparkle.mp3",
     cake: "assets/audio/sfx-sparkle.mp3",
-    wish: "assets/audio/sfx-wish.mp3",
+    bubbleAppear: "assets/audio/bubble-appear.mp3",
+    bubblePop: "assets/audio/bubble-pop.mp3",
     letter: "assets/audio/sfx-letter.mp3",
     finale: "assets/audio/sfx-finale.mp3",
     volume: 0.95,
@@ -152,16 +162,16 @@ window.GEVI_CONFIG = {
     center: "ini doaku untukmu",
     holdMs: 2800,
     bubbles: [
-      "Semoga sehat selalu",
-      "Semoga bahagia selalu",
-      "Semoga rejekimu semakin dilimpahkan",
-      "Semoga semakin banyak orang yang sayang kamu",
-      "Semoga kamu menjadi wanita kuat",
-      "Semoga kamu menemukan pasangan hidup yang kamu harapkan",
-      "Semoga pasangan hidupmu itu aku",
-      "Semoga doa dan keinginanmu segera di kabulkan apapun itu",
-      "Semoga semua keluargamu diberikan banyak rejeki yang melimpah",
-      "I Love You",
+      "Semoga kamu selalu diberikan kesehatan dan umur yang panjang",
+      "Semoga hatimu selalu penuh dengan rasa bahagia",
+      "Semoga rezekimu semakin melimpah dan berkah",
+      "Semoga makin banyak orang baik yang menyayangi dan mengelilingimu",
+      "Semoga kamu terus tumbuh menjadi wanita yang makin kuat dan hebat",
+      "Semoga kamu selalu ingat untuk beristirahat dan tidak terlalu keras pada dirimu sendiri",
+      "Semoga kamu makin bangga dan bersyukur atas semua proses yang sudah kamu lewati sampai hari ini",
+      "Semoga semua impian dan doa-doamu yang belum terwujud segera dikabulkan",
+      "Semoga kamu dan keluarga tercinta selalu dilimpahi keberkahan dan kebaikan",
+      "I Love You ❤️",
     ],
   },
 
