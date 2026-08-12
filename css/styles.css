@@ -2183,6 +2183,30 @@ body {
   user-select: none;
 }
 
+.memory-frame.is-empty .memory-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 0.1rem;
+  padding: 1.1rem 1rem;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(201, 166, 107, 0.14), transparent 62%),
+    linear-gradient(165deg, #2a1f22 0%, #1a1214 55%, #120e10 100%);
+  box-shadow: inset 0 0 0 1px rgba(247, 240, 232, 0.08);
+}
+
+.memory-empty-text {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 4.2vw, 1.18rem);
+  font-style: italic;
+  line-height: 1.4;
+  color: rgba(247, 240, 232, 0.88);
+  max-width: 11.5rem;
+}
+
 .memory-caption {
   margin-top: 0.7rem;
   padding: 0 0.15rem 0.15rem;
@@ -2192,6 +2216,10 @@ body {
   line-height: 1.35;
   text-align: center;
   color: #5a4038;
+}
+
+.memory-caption:empty {
+  display: none;
 }
 
 .memory-nav {
@@ -2265,6 +2293,150 @@ body {
   color: var(--blush);
   text-align: center;
   max-width: 18rem;
+}
+
+.invite-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.invite-seal {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  width: min(100%, 15rem);
+  padding: 0.35rem 0.5rem 0.2rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.invite-seal:focus-visible {
+  outline: 2px solid var(--champagne);
+  outline-offset: 6px;
+  border-radius: 0.35rem;
+}
+
+.invite-envelope {
+  position: relative;
+  width: 8.6rem;
+  height: 5.6rem;
+  border-radius: 0.2rem;
+  background: linear-gradient(165deg, #ebe0d2, #d8c4b0);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+  transform-origin: 50% 100%;
+  transition: transform 0.35s var(--ease);
+}
+
+.invite-seal:hover .invite-envelope,
+.invite-seal:active .invite-envelope {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.invite-flap {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 58%;
+  background: linear-gradient(180deg, #f4ebe1, #c9b29a);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+
+.invite-pocket {
+  position: absolute;
+  inset: 28% 0 0;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(90, 64, 56, 0.08) 100%),
+    linear-gradient(165deg, #e7d8c6, #cbb59f);
+  clip-path: polygon(0 22%, 50% 0, 100% 22%, 100% 100%, 0 100%);
+  z-index: 1;
+}
+
+.invite-wax {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  z-index: 3;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(circle at 35% 30%, #d56b6b, #8f2f36 70%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.invite-wax::after {
+  content: "♥";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  color: rgba(255, 236, 236, 0.9);
+  line-height: 1;
+}
+
+.invite-sealed-label {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 4vw, 1.15rem);
+  font-style: italic;
+  color: var(--cream);
+  text-align: center;
+}
+
+.invite-sealed-hint {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(243, 235, 227, 0.55);
+  animation: pulse-soft 2.4s ease-in-out infinite;
+}
+
+.invite-sheet {
+  max-height: min(42vh, 20rem);
+  animation: wish-field-in 0.55s var(--ease) both;
+}
+
+.invite-sheet .letter-label {
+  text-transform: none;
+  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+}
+
+.invite-stage.is-open .invite-seal {
+  display: none;
+}
+
+.scene[data-scene="finale"].is-invite-open .memory-deck,
+.scene[data-scene="finale"].is-invite-open .memory-dots,
+.scene[data-scene="finale"].is-invite-open #finale-caption,
+.scene[data-scene="finale"].is-invite-open #memory-hint {
+  display: none;
+}
+
+.scene[data-scene="finale"].is-invite-open .finale-end {
+  margin-top: 0.35rem;
+}
+
+.scene[data-scene="finale"].is-invite-open .invite-sheet {
+  max-height: min(58vh, 28rem);
+}
+
+#lights-off[hidden] {
+  display: none !important;
 }
 
 body.is-lights-out::before {

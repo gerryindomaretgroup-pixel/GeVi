@@ -224,7 +224,34 @@
           <p class="soft-line" id="memory-hint">geser ke kiri atau kanan</p>
           <div class="finale-end" id="finale-end" hidden>
             <p class="finale-thanks" id="finale-thanks">Terima kasih sudah membuka sampai akhir</p>
-            <button type="button" class="btn-next" id="lights-off" data-lights-off>matikan lampu</button>
+
+            <div class="invite-stage" id="invite-stage">
+              <button
+                type="button"
+                class="invite-seal"
+                id="invite-seal"
+                aria-label="Buka undangan"
+                aria-expanded="false"
+              >
+                <span class="invite-envelope" aria-hidden="true">
+                  <span class="invite-flap"></span>
+                  <span class="invite-pocket"></span>
+                  <span class="invite-wax"></span>
+                </span>
+                <span class="invite-sealed-label" id="invite-sealed-label">ada satu lagi untukmu</span>
+                <span class="invite-sealed-hint" id="invite-sealed-hint">ketuk untuk membuka</span>
+              </button>
+
+              <article class="letter-sheet invite-sheet" id="invite-sheet" hidden>
+                <p class="letter-label" id="invite-label">Undangan</p>
+                <p class="letter-body" id="invite-body"></p>
+                <p class="letter-sign" id="invite-sign"></p>
+              </article>
+            </div>
+
+            <button type="button" class="btn-next" id="lights-off" data-lights-off hidden>
+              Aku Pasti Datang 💖
+            </button>
           </div>
         </div>
       </section>

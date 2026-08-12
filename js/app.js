@@ -187,6 +187,14 @@
     if (lightsOff) {
       lightsOff.textContent = finale.lightsOffLabel || "matikan lampu";
     }
+
+    const invite = inviteConfig();
+    setText("invite-sealed-label", invite.sealedLabel || "ada satu lagi untukmu");
+    setText("invite-sealed-hint", invite.sealedHint || "ketuk untuk membuka");
+    setText("invite-label", invite.label || "Undangan");
+    renderInviteBody(invite.body || "");
+    const inviteFrom = (invite.sign || sender || "").trim();
+    setText("invite-sign", inviteFrom ? `— ${inviteFrom}` : "");
   }
 
   function formatRichText(raw) {
@@ -203,6 +211,12 @@
 
   function renderLetterBody(raw) {
     const el = document.getElementById("letter-preview");
+    if (!el) return;
+    el.innerHTML = formatRichText(raw);
+  }
+
+  function renderInviteBody(raw) {
+    const el = document.getElementById("invite-body");
     if (!el) return;
     el.innerHTML = formatRichText(raw);
   }
@@ -770,18 +784,104 @@
   const memoryNext = document.getElementById("memory-next");
   const memoryHint = document.getElementById("memory-hint");
   const finaleEnd = document.getElementById("finale-end");
+  const inviteStage = document.getElementById("invite-stage");
+  const inviteSeal = document.getElementById("invite-seal");
+  const inviteSheet = document.getElementById("invite-sheet");
   const lightsOffBtn = document.getElementById("lights-off");
   let memoryIndex = 0;
   let memoryCount = 0;
   let memoryScrollLock = false;
+  let inviteOpened = false;
+  let inviteReady = false;
+  let inviteRevealTimer = 0;
 
   function finaleConfig() {
     return config.finale || {};
   }
 
+  function inviteConfig() {
+    return finaleConfig().invite || {};
+  }
+
   function memoryList() {
     const list = finaleConfig().memories;
-    return Array.isArray(list) ? list.filter((m) => m && m.src) : [];
+    if (!Array.isArray(list)) return [];
+    return list.filter((m) => m && (m.empty || m.src));
+  }
+
+  function clearInviteRevealTimer() {
+    window.clearTimeout(inviteRevealTimer);
+    inviteRevealTimer = 0;
+  }
+
+  function resetInviteUi() {
+    clearInviteRevealTimer();
+    inviteOpened = false;
+    inviteReady = false;
+    const finaleScene = document.querySelector('.scene[data-scene="finale"]');
+    if (finaleScene) finaleScene.classList.remove("is-invite-open");
+    if (inviteStage) inviteStage.classList.remove("is-open");
+    if (inviteSeal) {
+      inviteSeal.hidden = false;
+      inviteSeal.setAttribute("aria-expanded", "false");
+    }
+    if (inviteSheet) inviteSheet.hidden = true;
+    if (lightsOffBtn) lightsOffBtn.hidden = true;
+    if (finaleEnd) finaleEnd.hidden = true;
+  }
+
+  function revealInviteStage() {
+    if (inviteReady) return;
+    if (!(memoryCount > 0 && memoryIndex >= memoryCount - 1)) return;
+    inviteReady = true;
+    if (finaleEnd) finaleEnd.hidden = false;
+    if (memoryHint) memoryHint.hidden = true;
+    if (!inviteOpened && lightsOffBtn) lightsOffBtn.hidden = true;
+    playSfx("sparkle");
+  }
+
+  function scheduleInviteReveal() {
+    if (inviteReady) {
+      if (finaleEnd) finaleEnd.hidden = false;
+      if (memoryHint) memoryHint.hidden = true;
+      return;
+    }
+    // Sudah menunggu — jangan reset timer tiap sync scroll
+    if (inviteRevealTimer) return;
+
+    if (finaleEnd) finaleEnd.hidden = true;
+    if (memoryHint) {
+      memoryHint.hidden = false;
+      memoryHint.textContent =
+        finaleConfig().lastSlideHint || "lihat sampai habis dulu ya…";
+    }
+    const delay = Math.max(
+      0,
+      Number(finaleConfig().inviteRevealDelayMs) || 3200
+    );
+    if (reduceMotion || delay === 0) {
+      revealInviteStage();
+      return;
+    }
+    inviteRevealTimer = window.setTimeout(() => {
+      inviteRevealTimer = 0;
+      revealInviteStage();
+    }, delay);
+  }
+
+  function openInvite() {
+    if (!inviteReady || inviteOpened) return;
+    inviteOpened = true;
+    playSfx("letter");
+    const finaleScene = document.querySelector('.scene[data-scene="finale"]');
+    if (finaleScene) finaleScene.classList.add("is-invite-open");
+    if (inviteStage) inviteStage.classList.add("is-open");
+    if (inviteSeal) {
+      inviteSeal.hidden = true;
+      inviteSeal.setAttribute("aria-expanded", "true");
+    }
+    if (inviteSheet) inviteSheet.hidden = false;
+    if (lightsOffBtn) lightsOffBtn.hidden = false;
   }
 
   function updateMemoryUi() {
@@ -793,8 +893,16 @@
     if (memoryPrev) memoryPrev.disabled = memoryIndex <= 0;
     if (memoryNext) memoryNext.disabled = memoryIndex >= memoryCount - 1;
     const atEnd = memoryCount > 0 && memoryIndex >= memoryCount - 1;
-    if (finaleEnd) finaleEnd.hidden = !atEnd;
-    if (memoryHint) memoryHint.hidden = atEnd;
+    if (!atEnd) {
+      resetInviteUi();
+      if (memoryHint) {
+        memoryHint.hidden = false;
+        memoryHint.textContent =
+          finaleConfig().hint || "geser ke kiri atau kanan";
+      }
+      return;
+    }
+    scheduleInviteReveal();
   }
 
   function goMemory(index, { smooth = true, sfx = true } = {}) {
@@ -853,13 +961,27 @@
     list.forEach((item, i) => {
       const figure = document.createElement("figure");
       figure.className = "memory-frame";
-      figure.setAttribute("aria-label", item.caption || `Kenangan ${i + 1}`);
-      const img = document.createElement("img");
-      img.src = item.src;
-      img.alt = item.caption || `Kenangan ${i + 1}`;
-      img.draggable = false;
-      img.decoding = "async";
-      figure.appendChild(img);
+      if (item.empty) {
+        figure.classList.add("is-empty");
+        const emptyText =
+          item.text || "Serta kenangan cerita kita lainnya";
+        figure.setAttribute("aria-label", emptyText);
+        const empty = document.createElement("div");
+        empty.className = "memory-empty";
+        const text = document.createElement("p");
+        text.className = "memory-empty-text";
+        text.textContent = emptyText;
+        empty.appendChild(text);
+        figure.appendChild(empty);
+      } else {
+        figure.setAttribute("aria-label", item.caption || `Kenangan ${i + 1}`);
+        const img = document.createElement("img");
+        img.src = item.src;
+        img.alt = item.caption || `Kenangan ${i + 1}`;
+        img.draggable = false;
+        img.decoding = "async";
+        figure.appendChild(img);
+      }
       if (item.caption) {
         const cap = document.createElement("figcaption");
         cap.className = "memory-caption";
@@ -880,14 +1002,21 @@
   }
 
   function enterFinaleScene() {
+    resetInviteUi();
     buildMemories();
     goMemory(0, { smooth: false, sfx: false });
   }
 
   function leaveFinaleScene() {
+    clearInviteRevealTimer();
     if (finaleEnd) finaleEnd.hidden = true;
-    if (memoryHint) memoryHint.hidden = false;
+    if (memoryHint) {
+      memoryHint.hidden = false;
+      memoryHint.textContent =
+        finaleConfig().hint || "geser ke kiri atau kanan";
+    }
     memoryIndex = 0;
+    resetInviteUi();
   }
 
   async function playLightsOut() {
@@ -930,6 +1059,13 @@
         event.preventDefault();
         goMemory(memoryIndex + 1);
       }
+    });
+  }
+  if (inviteSeal) {
+    inviteSeal.addEventListener("click", () => {
+      unlockAudio();
+      if (scenesOrder[index] !== "finale") return;
+      openInvite();
     });
   }
   if (lightsOffBtn) {
@@ -1304,6 +1440,16 @@
     if (recordNext) recordNext.hidden = false;
   }
 
+  function finishMusicPlayback() {
+    if (!musicPlaying && recordNext && !recordNext.hidden) return;
+    stopMusic();
+    setText(
+      "record-hint",
+      musicConfig().finishedHint || "selesai… lanjut kalau sudah siap"
+    );
+    showRecordContinue();
+  }
+
   async function startMusic() {
     const music = musicConfig();
     if (!recordAudio || !music.src) {
@@ -1326,8 +1472,10 @@
         tonearm.classList.add("is-on");
         tonearm.setAttribute("aria-pressed", "true");
       }
+      // Next sengaja ditahan sampai lagu habis (MDN: HTMLMediaElement ended)
+      if (recordNext) recordNext.hidden = true;
+      if (recordSkip) recordSkip.hidden = true;
       setText("record-hint", music.playingHint || "lagi muter… dengerin sampai habis ya");
-      showRecordContinue();
     } catch (err) {
       musicPlaying = false;
       setText("record-hint", "ketuk lagi jarumnya untuk memutar");
@@ -1353,9 +1501,7 @@
     if (!musicPlaying || !recordAudio) return;
     const endAt = Number(musicConfig().endAt) || 0;
     if (endAt > 0 && recordAudio.currentTime >= endAt) {
-      stopMusic();
-      setText("record-hint", "selesai… lanjut kalau sudah siap");
-      showRecordContinue();
+      finishMusicPlayback();
     }
   }
 
@@ -1452,10 +1598,9 @@
 
   if (recordAudio) {
     recordAudio.addEventListener("timeupdate", onMusicTimeUpdate);
+    // MDN: ended fires when playback reaches the end of the media
     recordAudio.addEventListener("ended", () => {
-      stopMusic();
-      setText("record-hint", "selesai… lanjut kalau sudah siap");
-      showRecordContinue();
+      finishMusicPlayback();
     });
   }
 
@@ -1557,6 +1702,7 @@
     img.src = src;
   });
   memoryList().forEach((item) => {
+    if (!item.src) return;
     const img = new Image();
     img.src = item.src;
   });

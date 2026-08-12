@@ -77,6 +77,7 @@ window.GEVI_CONFIG = {
     caption: "ada lagu yang aku sisipin buat kamu.",
     hint: "geser jarumnya ke piringan buat muterin",
     playingHint: "lagi muter… dengerin sampai habis ya",
+    finishedHint: "selesai… lanjut kalau sudah siap",
   },
 
   /**
@@ -158,12 +159,16 @@ window.GEVI_CONFIG = {
    * Scene penutup — swipe kenangan berbingkai.
    * Ideal: 4–6 foto (boleh sampai 7 jika cerita mengalir).
    * File di assets/images/memories/
+   * Slide terakhir bisa empty: true (bingkai kosong + teks).
+   * Setelah bingkai terakhir: undangan makan (invite) yang harus dibuka.
    */
   finale: {
     caption: "kenangan kita",
     hint: "geser ke kiri atau kanan",
     thanks: "Terima kasih sudah membuka sampai akhir",
-    lightsOffLabel: "matikan lampu",
+    lightsOffLabel: "Aku Pasti Datang 💖",
+    /** Tunggu lihat slide terakhir dulu, baru surat/undangan muncul */
+    inviteRevealDelayMs: 3200,
     memories: [
       {
         src: "assets/images/memories/P1.jpeg",
@@ -193,7 +198,24 @@ window.GEVI_CONFIG = {
         src: "assets/images/memories/P7.jpeg",
         caption: 'Katamu disini aku "kok kamu tau semuanya"',
       },
+      {
+        empty: true,
+        text: "Serta kenangan cerita kita lainnya",
+        caption: "",
+      },
     ],
+    /**
+     * Undangan makan — muncul setelah slide terakhir sempat dilihat.
+     * Ganti body / label / sign sesuai isi yang kamu mau.
+     */
+    invite: {
+      sealedLabel: "ada satu lagi untukmu",
+      sealedHint: "ketuk untuk membuka",
+      label: "Special Invitation for You ✨",
+      body:
+        "Hari ini adalah harimu, tapi izinkan aku yang merayakannya.\n\nAku ingin mengajakmu makan siang bersama untuk merayakan bertambahnya usiamu—sebuah momen kecil untuk mengapresiasi hadirmu yang selalu bikin hariku lebih cerah.\n\n📅 Hari / Tanggal: Sabtu, 5 September\n\n⏰ Waktu: Makan Siang (Lunch)\n\n📍 Tempat: A Surprise Destination Just for You\n\nWould you do me the honor of being my lunch date? 🍰",
+      sign: "Mas Gerry",
+    },
   },
 
   /** Urutan scene — jangan diubah kecuali kamu paham alurnya */
