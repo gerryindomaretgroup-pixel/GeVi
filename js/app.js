@@ -283,20 +283,41 @@
   function buildCakeConfetti() {
     if (!cakeConfetti || reduceMotion) return;
     cakeConfetti.innerHTML = "";
-    const colors = ["#e8c4c0", "#c9a66b", "#f3ebe3", "#c4787a", "#f0d7a8", "#ffffff"];
-    const count = 46;
+    const cake = cakeConfig();
+    const colors = [
+      "#e8c4c0",
+      "#c9a66b",
+      "#f3ebe3",
+      "#c4787a",
+      "#f0d7a8",
+      "#ffffff",
+      "#d4a0a4",
+      "#ffe8a3",
+      "#f7d0d4",
+      "#b8895a",
+    ];
+    const count = Math.max(80, Number(cake.confettiCount) || 120);
     for (let i = 0; i < count; i++) {
+      const fromTop = i % 2 === 0;
       const bit = document.createElement("span");
-      bit.className = "confetti-bit";
+      bit.className = `confetti-bit ${fromTop ? "from-top" : "from-bottom"}`;
       bit.style.left = `${Math.random() * 100}%`;
-      bit.style.setProperty("--cx", `${-40 + Math.random() * 80}px`);
-      bit.style.setProperty("--cy", `${70 + Math.random() * 50}vh`);
-      bit.style.setProperty("--rot", `${Math.floor(Math.random() * 720)}deg`);
-      bit.style.setProperty("--dur", `${1.1 + Math.random() * 0.9}s`);
-      bit.style.setProperty("--delay", `${Math.random() * 0.35}s`);
+      // Ledakan menyembur: atas → ke bawah, bawah → ke atas
+      const sprayX = -90 + Math.random() * 180;
+      const sprayY = fromTop
+        ? 55 + Math.random() * 70
+        : -(55 + Math.random() * 70);
+      bit.style.setProperty("--cx", `${sprayX}px`);
+      bit.style.setProperty("--cy", `${sprayY}vh`);
+      bit.style.setProperty("--rot", `${Math.floor(Math.random() * 980 - 490)}deg`);
+      bit.style.setProperty("--dur", `${1.6 + Math.random() * 1.8}s`);
+      bit.style.setProperty("--delay", `${Math.random() * 1.1}s`);
       bit.style.background = colors[i % colors.length];
-      bit.style.width = `${6 + Math.random() * 7}px`;
-      bit.style.height = `${8 + Math.random() * 10}px`;
+      const w = 5 + Math.random() * 9;
+      const h = 7 + Math.random() * 12;
+      bit.style.width = `${w}px`;
+      bit.style.height = `${h}px`;
+      if (Math.random() > 0.55) bit.classList.add("is-round");
       cakeConfetti.appendChild(bit);
     }
   }
@@ -425,13 +446,29 @@
       return;
     }
 
-    // 1) Confetti dulu
+    // 1) Confetti dulu — ledakan atas & bawah + suara, ~5 detik
     buildCakeConfetti();
     if (cakeConfetti) cakeConfetti.classList.add("is-on");
     setText("cake-hint", cake.confettiHint || "🎉");
-    playSfx("finale");
+    playSfx("confetti");
+    // Ulangi suara di tengah supaya terasa meriah sepanjang 5 detik
+    scheduleCake(() => {
+      if (scenesOrder[index] !== "cake") return;
+      playSfx("confetti");
+      // Gelombang confetti kedua biar tetap penuh
+      buildCakeConfetti();
+      if (cakeConfetti) {
+        cakeConfetti.classList.remove("is-on");
+        void cakeConfetti.offsetWidth;
+        cakeConfetti.classList.add("is-on");
+      }
+    }, 1700);
+    scheduleCake(() => {
+      if (scenesOrder[index] !== "cake") return;
+      playSfx("sparkle");
+    }, 3200);
 
-    const confettiMs = Number(cake.confettiMs) || 1600;
+    const confettiMs = Number(cake.confettiMs) || 5000;
     const revealMs = Number(cake.revealMs) || 1100;
     const lightingMs = Number(cake.lightingMs) || 1400;
 
