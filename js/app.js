@@ -277,19 +277,22 @@
       const digits = String(
         cake.candleDigits || config.age || "30"
       ).replace(/\D/g, "") || "30";
-      const wrap = document.createElement("div");
-      wrap.className = "candle-digits";
-      wrap.style.left = cake.candleLeft || "50%";
-      wrap.style.top = cake.candleTop || "47%";
-      [...digits].forEach((ch) => {
+      const baseTop = cake.candleTop || "50%";
+      const baseLeft = Number.parseFloat(cake.candleLeft) || 50.5;
+      // Sepasang angka di kiri-kanan kartu, di atas coklat tiramisu
+      const spread = Number(cake.candleSpread) || 11.5;
+      const chars = [...digits];
+      const mid = (chars.length - 1) / 2;
+      chars.forEach((ch, i) => {
         const el = document.createElement("span");
         el.className = "candle candle--digit";
+        el.style.left = `${baseLeft + (i - mid) * spread}%`;
+        el.style.top = baseTop;
         el.innerHTML =
           '<span class="candle-flame"></span><span class="candle-digit-face" aria-hidden="true"></span>';
         el.querySelector(".candle-digit-face").textContent = ch;
-        wrap.appendChild(el);
+        cakeCandles.appendChild(el);
       });
-      cakeCandles.appendChild(wrap);
       return;
     }
 

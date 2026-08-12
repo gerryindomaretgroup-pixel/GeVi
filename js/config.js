@@ -116,9 +116,10 @@ window.GEVI_CONFIG = {
     /** "age" = lilin berbentuk angka umur; angka lain = jumlah lilin biasa */
     candleMode: "age",
     candleDigits: "",
-    /** Posisi di atas area coklat kue (di depan kartu Happy Birthday) */
-    candleTop: "60%",
-    candleLeft: "50%",
+    /** Posisi di area coklat tiramisu — angka di kiri & kanan kartu */
+    candleTop: "51.5%",
+    candleLeft: "50.5%",
+    candleSpread: 24,
     caption: "sekarang bagian paling penting",
     hint: "tekan & tahan buat tiup lilinnya pelan-pelan",
     progressHint: "dikit lagi…",
