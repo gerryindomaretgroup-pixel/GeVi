@@ -12,7 +12,7 @@ window.GEVI_CONFIG = {
   switchHint: "nyalakan lampunya",
 
   /** Surprise */
-  surpriseEyebrow: "Surprise",
+  surpriseEyebrow: "",
   surpriseTitle: "Selamat Ulang Tahun Sayangku",
   /** Tampilkan "yang ke-XX" di scene surprise */
   showAge: false,
@@ -131,7 +131,7 @@ window.GEVI_CONFIG = {
     doneHint: "lilinnya padam… lanjut ya",
     holdMs: 2200,
     confettiMs: 5000,
-    confettiCount: 120,
+    confettiCount: 140,
     revealMs: 1100,
     lightingMs: 1400,
   },

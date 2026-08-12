@@ -119,7 +119,9 @@
 
     setText("dark-text", config.darkText || "kok gelap ya…");
     setText("switch-hint", config.switchHint || "nyalakan lampunya");
-    setText("surprise-eyebrow", config.surpriseEyebrow || "Surprise");
+    setText("surprise-eyebrow", config.surpriseEyebrow || "");
+    const eyebrow = document.getElementById("surprise-eyebrow");
+    if (eyebrow) eyebrow.hidden = !(config.surpriseEyebrow || "").trim();
     setText("surprise-title", config.surpriseTitle || "Selamat Ulang Tahun Sayangku");
     setText("surprise-name", name);
 
@@ -285,41 +287,65 @@
     cakeConfetti.innerHTML = "";
     const cake = cakeConfig();
     const colors = [
-      "#e8c4c0",
+      "#ff6b6b",
+      "#ffd93d",
+      "#6bcB77",
+      "#4d96ff",
+      "#ff8fab",
       "#c9a66b",
-      "#f3ebe3",
-      "#c4787a",
-      "#f0d7a8",
       "#ffffff",
-      "#d4a0a4",
-      "#ffe8a3",
-      "#f7d0d4",
-      "#b8895a",
+      "#b388ff",
+      "#ff9f43",
+      "#48dbfb",
+      "#f368e0",
+      "#e8c4c0",
+      "#20c997",
+      "#feca57",
     ];
-    const count = Math.max(80, Number(cake.confettiCount) || 120);
-    for (let i = 0; i < count; i++) {
-      const fromTop = i % 2 === 0;
-      const bit = document.createElement("span");
-      bit.className = `confetti-bit ${fromTop ? "from-top" : "from-bottom"}`;
-      bit.style.left = `${Math.random() * 100}%`;
-      // Ledakan menyembur: atas → ke bawah, bawah → ke atas
-      const sprayX = -90 + Math.random() * 180;
-      const sprayY = fromTop
-        ? 55 + Math.random() * 70
-        : -(55 + Math.random() * 70);
-      bit.style.setProperty("--cx", `${sprayX}px`);
-      bit.style.setProperty("--cy", `${sprayY}vh`);
-      bit.style.setProperty("--rot", `${Math.floor(Math.random() * 980 - 490)}deg`);
-      bit.style.setProperty("--dur", `${1.6 + Math.random() * 1.8}s`);
-      bit.style.setProperty("--delay", `${Math.random() * 1.1}s`);
-      bit.style.background = colors[i % colors.length];
-      const w = 5 + Math.random() * 9;
-      const h = 7 + Math.random() * 12;
-      bit.style.width = `${w}px`;
-      bit.style.height = `${h}px`;
-      if (Math.random() > 0.55) bit.classList.add("is-round");
-      cakeConfetti.appendChild(bit);
-    }
+    // Urutan ledakan pojok bergantian (MDN: animation-delay)
+    const corners = [
+      { name: "tr", left: "92%", top: "6%", wave: 0 },
+      { name: "bl", left: "8%", top: "92%", wave: 1 },
+      { name: "tl", left: "8%", top: "6%", wave: 2 },
+      { name: "br", left: "92%", top: "92%", wave: 3 },
+    ];
+    const perCorner = Math.max(24, Math.floor((Number(cake.confettiCount) || 140) / corners.length));
+    const waveGap = 0.95; // detik antar pojok
+
+    corners.forEach((corner) => {
+      for (let i = 0; i < perCorner; i++) {
+        const bit = document.createElement("span");
+        bit.className = `confetti-bit from-corner corner-${corner.name}`;
+        bit.style.left = corner.left;
+        bit.style.top = corner.top;
+        // Sembur keluar dari pojok ke arah tengah/layar
+        const angleBase =
+          corner.name === "tr"
+            ? 200
+            : corner.name === "bl"
+              ? 20
+              : corner.name === "tl"
+                ? 340
+                : 160;
+        const angle = ((angleBase + (Math.random() * 70 - 35)) * Math.PI) / 180;
+        const dist = 38 + Math.random() * 55;
+        const sprayX = Math.cos(angle) * dist;
+        const sprayY = Math.sin(angle) * dist;
+        bit.style.setProperty("--cx", `${sprayX}vw`);
+        bit.style.setProperty("--cy", `${sprayY}vh`);
+        bit.style.setProperty("--rot", `${Math.floor(Math.random() * 1080 - 540)}deg`);
+        bit.style.setProperty("--dur", `${1.5 + Math.random() * 1.4}s`);
+        bit.style.setProperty(
+          "--delay",
+          `${corner.wave * waveGap + Math.random() * 0.28}s`
+        );
+        bit.style.background = colors[(i + corner.wave * 3) % colors.length];
+        bit.style.width = `${5 + Math.random() * 10}px`;
+        bit.style.height = `${6 + Math.random() * 12}px`;
+        if (Math.random() > 0.5) bit.classList.add("is-round");
+        cakeConfetti.appendChild(bit);
+      }
+    });
   }
 
   function buildCandles() {
@@ -446,27 +472,28 @@
       return;
     }
 
-    // 1) Confetti dulu — ledakan atas & bawah + suara, ~5 detik
+    // 1) Confetti dulu — ledakan pojok bergilir + suara, ~5 detik
     buildCakeConfetti();
     if (cakeConfetti) cakeConfetti.classList.add("is-on");
     setText("cake-hint", cake.confettiHint || "🎉");
     playSfx("confetti");
-    // Ulangi suara di tengah supaya terasa meriah sepanjang 5 detik
+    // Suara tiap gelombang pojok
     scheduleCake(() => {
       if (scenesOrder[index] !== "cake") return;
       playSfx("confetti");
-      // Gelombang confetti kedua biar tetap penuh
-      buildCakeConfetti();
-      if (cakeConfetti) {
-        cakeConfetti.classList.remove("is-on");
-        void cakeConfetti.offsetWidth;
-        cakeConfetti.classList.add("is-on");
-      }
-    }, 1700);
+    }, 950);
     scheduleCake(() => {
       if (scenesOrder[index] !== "cake") return;
       playSfx("sparkle");
-    }, 3200);
+    }, 1900);
+    scheduleCake(() => {
+      if (scenesOrder[index] !== "cake") return;
+      playSfx("confetti");
+    }, 2850);
+    scheduleCake(() => {
+      if (scenesOrder[index] !== "cake") return;
+      playSfx("sparkle");
+    }, 3800);
 
     const confettiMs = Number(cake.confettiMs) || 5000;
     const revealMs = Number(cake.revealMs) || 1100;
@@ -964,13 +991,13 @@
     }
     const music = musicConfig();
     setText("record-hint", music.hint || "geser jarumnya ke piringan buat muterin");
-    if (recordSkip) recordSkip.hidden = false;
+    if (recordSkip) recordSkip.hidden = true;
     if (recordNext) recordNext.hidden = true;
   }
 
   function enterRecordScene() {
     resetRecordUi();
-    if (recordSkip) recordSkip.hidden = false;
+    if (recordSkip) recordSkip.hidden = true;
     if (recordNext) recordNext.hidden = true;
   }
 

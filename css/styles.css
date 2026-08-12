@@ -789,9 +789,9 @@ body {
 }
 
 .display--wish {
-  font-size: clamp(1.55rem, 6.5vw, 2.25rem);
-  line-height: 1.2;
-  max-width: 16ch;
+  font-size: clamp(2.15rem, 9.5vw, 3.15rem);
+  line-height: 1.15;
+  max-width: 14ch;
 }
 
 .display--sm {
@@ -820,6 +820,15 @@ body {
   color: var(--champagne);
   margin-top: 0.25rem;
   max-width: 14ch;
+}
+
+.script-name--hero {
+  font-size: clamp(2.35rem, 10.5vw, 3.6rem);
+  line-height: 1.12;
+  margin-top: 0.55rem;
+  max-width: 16ch;
+  color: var(--blush);
+  text-shadow: 0 0 28px rgba(232, 196, 192, 0.22);
 }
 
 .script-name--sm {
@@ -1249,68 +1258,47 @@ body {
 .confetti-bit {
   position: absolute;
   left: 50%;
+  top: 50%;
   border-radius: 2px;
   opacity: 0;
   will-change: transform, opacity;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
 .confetti-bit.is-round {
   border-radius: 50%;
 }
 
-.confetti-bit.from-top {
-  top: -4%;
-}
-
-.confetti-bit.from-bottom {
-  bottom: -4%;
-  top: auto;
-}
-
-.cake-confetti.is-on .confetti-bit.from-top {
-  animation: confetti-burst-down var(--dur, 2s) cubic-bezier(0.12, 0.75, 0.2, 1) both;
+.cake-confetti.is-on .confetti-bit.from-corner {
+  animation: confetti-corner-burst var(--dur, 2s) cubic-bezier(0.12, 0.75, 0.2, 1) both;
   animation-delay: var(--delay, 0s);
 }
 
-.cake-confetti.is-on .confetti-bit.from-bottom {
-  animation: confetti-burst-up var(--dur, 2s) cubic-bezier(0.12, 0.75, 0.2, 1) both;
-  animation-delay: var(--delay, 0s);
-}
-
-@keyframes confetti-burst-down {
+@keyframes confetti-corner-burst {
   0% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.35);
+    transform: translate3d(-50%, -50%, 0) scale(0.2) rotate(0deg);
   }
-  8% {
+  10% {
     opacity: 1;
-    transform: translate3d(calc(var(--cx, 20px) * 0.15), 8vh, 0) rotate(calc(var(--rot, 360deg) * 0.12)) scale(1.15);
+    transform: translate3d(
+        calc(-50% + var(--cx, 10vw) * 0.2),
+        calc(-50% + var(--cy, 10vh) * 0.2),
+        0
+      )
+      scale(1.25) rotate(calc(var(--rot, 360deg) * 0.15));
   }
   55% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate3d(var(--cx, 20px), var(--cy, 80vh), 0) rotate(var(--rot, 360deg)) scale(0.85);
-  }
-}
-
-@keyframes confetti-burst-up {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.35);
-  }
-  8% {
-    opacity: 1;
-    transform: translate3d(calc(var(--cx, 20px) * 0.15), -8vh, 0) rotate(calc(var(--rot, 360deg) * 0.12)) scale(1.15);
-  }
-  55% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--cx, 20px), var(--cy, -80vh), 0) rotate(var(--rot, 360deg)) scale(0.85);
+    transform: translate3d(
+        calc(-50% + var(--cx, 40vw)),
+        calc(-50% + var(--cy, 40vh)),
+        0
+      )
+      scale(0.8) rotate(var(--rot, 360deg));
   }
 }
 
