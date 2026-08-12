@@ -117,7 +117,7 @@ window.GEVI_CONFIG = {
     candleMode: "age",
     candleDigits: "",
     /** Posisi di atas area coklat kue (di depan kartu Happy Birthday) */
-    candleTop: "58%",
+    candleTop: "60%",
     candleLeft: "50%",
     caption: "sekarang bagian paling penting",
     hint: "tekan & tahan buat tiup lilinnya pelan-pelan",
