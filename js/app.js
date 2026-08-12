@@ -20,6 +20,7 @@
   const vinyl = document.getElementById("vinyl");
   const tonearm = document.getElementById("tonearm");
   const recordAudio = document.getElementById("record-audio");
+  const bgmAudio = document.getElementById("bgm-audio");
   const recordHint = document.getElementById("record-hint");
   const recordSkip = document.getElementById("record-skip");
   const recordNext = document.getElementById("record-next");
@@ -34,10 +35,17 @@
   let musicStarting = false;
   let armDragging = false;
   let noteIndex = 0;
+  let bgmWanted = false;
+  let bgmDucked = false;
+  let bgmFadeTimer = 0;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function musicConfig() {
     return config.music || {};
+  }
+
+  function bgmConfig() {
+    return config.bgm || {};
   }
 
   function sfxConfig() {
@@ -60,10 +68,122 @@
     });
   }
 
+  function setupBgm() {
+    if (!bgmAudio) return;
+    const bgm = bgmConfig();
+    if (!bgm.src) return;
+    if (bgmAudio.dataset.src !== bgm.src) {
+      bgmAudio.src = bgm.src;
+      bgmAudio.dataset.src = bgm.src;
+      bgmAudio.preload = "auto";
+    }
+    bgmAudio.loop = bgm.loop !== false;
+  }
+
+  function clearBgmFade() {
+    window.clearInterval(bgmFadeTimer);
+    bgmFadeTimer = 0;
+  }
+
+  function fadeBgmTo(targetVol, ms) {
+    if (!bgmAudio) return Promise.resolve();
+    clearBgmFade();
+    const start = bgmAudio.volume;
+    const end = Math.min(1, Math.max(0, targetVol));
+    const dur = Math.max(0, Number(ms) || 0);
+    if (dur <= 0 || Math.abs(start - end) < 0.01) {
+      bgmAudio.volume = end;
+      return Promise.resolve();
+    }
+    const t0 = performance.now();
+    return new Promise((resolve) => {
+      bgmFadeTimer = window.setInterval(() => {
+        const p = Math.min(1, (performance.now() - t0) / dur);
+        bgmAudio.volume = start + (end - start) * p;
+        if (p >= 1) {
+          clearBgmFade();
+          bgmAudio.volume = end;
+          resolve();
+        }
+      }, 32);
+    });
+  }
+
+  async function startBgm() {
+    setupBgm();
+    const bgm = bgmConfig();
+    if (!bgmAudio || !bgm.src) return;
+    bgmWanted = true;
+    if (bgmDucked) return;
+    const vol = Math.min(1, Math.max(0, Number(bgm.volume) || 0.26));
+    try {
+      if (bgmAudio.paused) {
+        bgmAudio.volume = 0;
+        await bgmAudio.play();
+      }
+      await fadeBgmTo(vol, Number(bgm.fadeMs) || 900);
+    } catch {
+      /* gesture / autoplay — coba lagi di interaksi berikutnya */
+    }
+  }
+
+  async function duckBgm() {
+    if (!bgmAudio || !bgmWanted) return;
+    bgmDucked = true;
+    const bgm = bgmConfig();
+    const duck = Math.min(
+      1,
+      Math.max(0, Number(bgm.duckVolume) ?? 0)
+    );
+    await fadeBgmTo(duck, Math.min(700, Number(bgm.fadeMs) || 900));
+    if (duck <= 0.001) {
+      try {
+        bgmAudio.pause();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  async function restoreBgm() {
+    if (!bgmAudio || !bgmWanted) return;
+    bgmDucked = false;
+    const bgm = bgmConfig();
+    const vol = Math.min(1, Math.max(0, Number(bgm.volume) || 0.26));
+    try {
+      if (bgmAudio.paused) {
+        bgmAudio.volume = 0;
+        await bgmAudio.play();
+      }
+      await fadeBgmTo(vol, Number(bgm.fadeMs) || 900);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function stopBgm({ fade = true } = {}) {
+    bgmWanted = false;
+    bgmDucked = false;
+    if (!bgmAudio) return;
+    const bgm = bgmConfig();
+    if (fade) await fadeBgmTo(0, Number(bgm.fadeMs) || 900);
+    else {
+      clearBgmFade();
+      bgmAudio.volume = 0;
+    }
+    try {
+      bgmAudio.pause();
+      bgmAudio.currentTime = 0;
+    } catch {
+      /* ignore */
+    }
+  }
+
   async function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
     preloadSfx();
+    setupBgm();
     // Warm-up silent play under user gesture (autoplay policy)
     try {
       const warm = new Audio(
@@ -1020,6 +1140,8 @@
   }
 
   async function playLightsOut() {
+    // Matikan BGM saat lampu padam / restart
+    stopBgm({ fade: true });
     playSfx("light");
     document.body.classList.add("is-lights-out");
     if (festoon) {
@@ -1379,6 +1501,8 @@
     if (transition === "light") {
       await playLightReveal();
       await swapScene(nextIndex);
+      // BGM mulai setelah lampu nyala, terus sampai akhir (kecuali di-duck saat record)
+      startBgm();
     } else if (transition === "lightsOut") {
       await playLightsOut();
       await swapScene(nextIndex);
@@ -1433,6 +1557,7 @@
 
   function leaveRecordScene() {
     stopMusic();
+    restoreBgm();
   }
 
   function showRecordContinue() {
@@ -1448,6 +1573,7 @@
       musicConfig().finishedHint || "selesai… lanjut kalau sudah siap"
     );
     showRecordContinue();
+    restoreBgm();
   }
 
   async function startMusic() {
@@ -1462,6 +1588,8 @@
     const startAt = Number(music.startAt) || 0;
     try {
       playSfx("needle");
+      // Duck BGM dulu supaya tidak tabrakan dengan lagu piringan
+      duckBgm();
       recordAudio.pause();
       recordAudio.currentTime = startAt;
       await recordAudio.play();
@@ -1479,6 +1607,7 @@
     } catch (err) {
       musicPlaying = false;
       setText("record-hint", "ketuk lagi jarumnya untuk memutar");
+      restoreBgm();
     } finally {
       musicStarting = false;
     }
@@ -1697,6 +1826,7 @@
 
   // Preload assets early; unlock still needs gesture
   preloadSfx();
+  setupBgm();
   getFlowerImages().forEach((src) => {
     const img = new Image();
     img.src = src;

@@ -81,6 +81,22 @@ window.GEVI_CONFIG = {
   },
 
   /**
+   * Musik latar lembut dari awal (setelah lampu nyala) sampai akhir.
+   * Saat piringan berputar, BGM di-duck supaya tidak tabrakan.
+   * Rekomendasi pengganti (file sendiri di assets/audio/):
+   * - soft piano / lo-fi tanpa lirik
+   * - instrumental romantis pelan (bukan lagu vokal penuh)
+   * - ambient warm pad
+   */
+  bgm: {
+    src: "assets/audio/bgm-soft-warm.mp3",
+    volume: 0.26,
+    duckVolume: 0,
+    fadeMs: 900,
+    loop: true,
+  },
+
+  /**
    * Efek suara saat ganti scene (from → sfx)
    * dark→surprise memakai light; scene lain memakai key di bawah.
    */
@@ -213,7 +229,7 @@ window.GEVI_CONFIG = {
       sealedHint: "ketuk untuk membuka",
       label: "Special Invitation for You ✨",
       body:
-        "Hari ini adalah harimu, tapi izinkan aku yang merayakannya.\n\nAku ingin mengajakmu makan siang bersama untuk merayakan bertambahnya usiamu, sebuah momen kecil untuk mengapresiasi hadirmu yang selalu bikin hariku lebih cerah.\n\n📅 Hari / Tanggal: Sabtu, 5 September\n\n⏰ Waktu: Makan Siang (Lunch)\n\n📍 Tempat: A Surprise Destination Just for You\n\nWould you do me the honor of being my lunch date? 🍰",
+        "Hari ini adalah harimu, tapi izinkan aku yang merayakannya.\n\nAku ingin mengajakmu makan siang bersama untuk merayakan bertambahnya usiamu, sebuah momen kecil untuk mengapresiasi hadirmu yang selalu bikin hariku lebih cerah.\n\n📅 Hari / Tanggal: Sabtu, 5 September 2026\n\n⏰ Waktu: Makan Siang (Lunch)\n\n📍 Tempat: A Surprise Destination Just for You\n\nWould you do me the honor of being my lunch date? 🍰",
       sign: "Mas Gerry",
     },
   },
