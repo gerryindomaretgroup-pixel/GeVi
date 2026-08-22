@@ -770,6 +770,22 @@
     return true;
   }
 
+  function shuffleCopy(items) {
+    const copy = items.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const swap = copy[i];
+      copy[i] = copy[j];
+      copy[j] = swap;
+    }
+    return copy;
+  }
+
+  function nextWishMessage() {
+    const list = Array.isArray(wishConfig().bubbles) ? wishConfig().bubbles : [];
+    return list[wishPopped] || "";
+  }
+
   function openWishFocus(text, btn) {
     if (!wishFocus || !wishFocusText) return;
     if (btn && (btn.classList.contains("is-popped") || btn.classList.contains("is-popping"))) {
@@ -789,7 +805,7 @@
     const wish = wishConfig();
     const list = Array.isArray(wish.bubbles) ? wish.bubbles : [];
     wishTotal = list.length;
-    const slots = [
+    const slots = shuffleCopy([
       { x: 10, y: 10, s: 1.05, d: 11, delay: 0 },
       { x: 72, y: 8, s: 0.9, d: 13, delay: 0.4 },
       { x: 86, y: 30, s: 1.15, d: 10, delay: 0.8 },
@@ -800,24 +816,22 @@
       { x: 40, y: 62, s: 0.88, d: 13.5, delay: 1.8 },
       { x: 62, y: 78, s: 1.2, d: 12.5, delay: 0.9 },
       { x: 28, y: 82, s: 1.0, d: 14.5, delay: 1.3 },
-    ];
+    ]);
 
-    list.forEach((text, i) => {
+    list.forEach((_, i) => {
       const slot = slots[i % slots.length];
       const btn = document.createElement("button");
       btn.type = "button";
-      const isLove = /i love you/i.test(text);
-      btn.className = `wish-bubble wish-bubble--${(i % 5) + 1}${isLove ? " is-love" : ""}`;
+      btn.className = `wish-bubble wish-bubble--${(i % 5) + 1}`;
       btn.style.setProperty("--bx", `${slot.x}%`);
       btn.style.setProperty("--by", `${slot.y}%`);
       btn.style.setProperty("--bs", String(slot.s));
       btn.style.setProperty("--bdur", `${slot.d}s`);
       btn.style.setProperty("--bdelay", `${slot.delay + i * 0.1}s`);
       btn.style.setProperty("--bdrift", `${((i % 3) - 1) * 12}px`);
-      btn.dataset.message = text;
       btn.setAttribute("aria-label", "Buka doa");
       btn.innerHTML = '<span class="wish-bubble-shine" aria-hidden="true"></span>';
-      btn.addEventListener("click", () => openWishFocus(text, btn));
+      btn.addEventListener("click", () => openWishFocus(nextWishMessage(), btn));
       wishBubbles.appendChild(btn);
     });
   }
@@ -1178,12 +1192,20 @@
           const landscape = img.naturalWidth >= img.naturalHeight;
           figure.classList.toggle("is-landscape", landscape);
           figure.classList.toggle("is-portrait", !landscape);
-          // Ikuti rasio asli supaya foto tidak terpotong
+          if (item.fill) return;
           img.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
         };
         if (img.complete && img.naturalWidth) applyOrientation();
         else img.addEventListener("load", applyOrientation, { once: true });
-        figure.appendChild(img);
+        if (item.fill) {
+          figure.classList.add("is-fill");
+          const well = document.createElement("div");
+          well.className = "memory-photo";
+          well.appendChild(img);
+          figure.appendChild(well);
+        } else {
+          figure.appendChild(img);
+        }
       }
       if (item.caption) {
         const cap = document.createElement("figcaption");

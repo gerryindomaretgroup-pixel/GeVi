@@ -162,16 +162,17 @@ window.GEVI_CONFIG = {
     almostHint: "hampir… jangan lepas dulu",
     center: "ini doaku untukmu",
     holdMs: 2800,
+    /** Urutan teks saat gelembung diletuskan (posisi balon tetap acak) */
     bubbles: [
-      "Semoga kamu selalu diberikan kesehatan dan umur yang panjang",
-      "Semoga hatimu selalu penuh dengan rasa bahagia",
-      "Semoga rezekimu semakin melimpah dan berkah",
-      "Semoga makin banyak orang baik yang menyayangi dan mengelilingimu",
-      "Semoga kamu terus tumbuh menjadi wanita yang makin kuat dan hebat",
-      "Semoga kamu selalu ingat untuk beristirahat dan tidak terlalu keras pada dirimu sendiri",
-      "Semoga kamu makin bangga dan bersyukur atas semua proses yang sudah kamu lewati sampai hari ini",
-      "Semoga semua impian dan doa-doamu yang belum terwujud segera dikabulkan",
-      "Semoga kamu dan keluarga tercinta selalu dilimpahi keberkahan dan kebaikan",
+      "Kamu selalu diberikan kesehatan dan umur yang panjang",
+      "Perasaan dan hatimu selalu penuh dengan rasa bahagia",
+      "Rezekimu semakin melimpah dan berkah",
+      "Semakin banyak bertemu orang baik yang menyayangimu",
+      "Kamu terus tumbuh menjadi wanita yang makin kuat dan hebat",
+      "Kamu selalu ingat untuk beristirahat dan tidak terlalu keras pada dirimu sendiri",
+      "Kamu selalu bangga pada diri sendiri dan bersyukur atas semua proses yang sudah kamu lewati sampai hari ini",
+      "Semua impian dan doa-doamu yang belum terwujud segera dikabulkan",
+      "Kamu dan keluarga tercinta selalu dilimpahi keberkahan dan kebaikan",
       "I Love You ❤️",
     ],
   },
@@ -200,7 +201,7 @@ window.GEVI_CONFIG = {
     memories: [
       {
         src: "assets/images/memories/P1.jpeg",
-        caption: "Pertemuan pertama kita waktu itu, betapa bahagianya aku",
+        caption: "Pertemuan pertama kita",
       },
       {
         src: "assets/images/memories/P9.jpeg",
@@ -208,27 +209,41 @@ window.GEVI_CONFIG = {
       },
       {
         src: "assets/images/memories/P2.jpeg",
-        caption: "Mengunjungi tempat hits bersama kamu",
+        caption: "Mengunjungi tempat hits di Glodok bersama kamu",
       },
       {
         src: "assets/images/memories/P3.jpeg",
-        caption: "Photo Box Pertama Kita",
+        caption: "Photo Box pertama kita",
       },
       {
         src: "assets/images/memories/P10.jpeg",
-        caption: "Mengunjungi pantai selepas pulang bertemu keluargamu",
+        caption: "Mengunjungi pantai selepas bertemu dengan keluargamu",
       },
       {
         src: "assets/images/memories/P8.jpeg",
-        caption: "Ayam pop pertama kamu di Pagi Sore",
+        caption: "Makan Ayam Pop bersama di Pagi Sore",
       },
       {
         src: "assets/images/memories/P7.jpeg",
         caption: 'Katamu disini aku "kok kamu tau semuanya"',
       },
       {
+        src: "assets/images/memories/P11N.jpeg",
+        caption: "Video Call pertama kita",
+      },
+      {
+        src: "assets/images/memories/P12.jpeg",
+        caption: "Pose foto favorit kamu",
+        fill: true,
+      },
+      {
+        src: "assets/images/memories/P13.jpeg",
+        caption: "Senyum paling manis, tulus dan bahagia dari kamu",
+        fill: true,
+      },
+      {
         empty: true,
-        text: "Serta kenangan cerita kita lainnya",
+        text: "Serta memori indah kita selanjutnya",
         caption: "",
       },
     ],

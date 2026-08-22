@@ -2211,6 +2211,23 @@ body {
   max-height: min(56vh, 22rem);
 }
 
+/* MDN: kotak berukuran tetap + img 100% + object-fit: cover agar tidak letterbox */
+.memory-frame.is-fill .memory-photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 0.1rem;
+}
+
+.memory-frame.is-fill .memory-photo img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: center 22%;
+  background: transparent;
+}
+
 .memory-frame.is-empty .memory-empty {
   display: flex;
   align-items: center;
